@@ -1,204 +1,402 @@
-# Feature Specification: Claude Skills Runtime Framework and Test Web App
+# 功能规格说明书：Claude Skills 运行时框架与测试 Web 应用
 
-**Feature Branch**: `001-skills-runtime`
-**Created**: 2026-01-06
-**Status**: Draft
-**Input**: User description: "为 claude skills(https://github.com/anthropics/skills) 智能体实现一个运行时框架和测试web app，web app 支持 claude skills zip 包上传、内容检验（必须符合 claude skills 规范）、目录树和文件内容预览、内容修改和重新打包；claude skill 运行、运行日志和结果查看等；claude skills 运行时框架是核心，可以基于开源的框架（比如业界成熟的智能体框架上开发，这个技术方案是关键，需要深入调研），保证其运行效果不弱于 claude code, 同时不能引入不必要的复杂度"
-
-## User Scenarios & Testing *(mandatory)*
-
-### User Story 1 - Upload and Validate Skill Package (Priority: P1)
-
-A developer wants to test a Claude Skill they created by uploading it to the web app for validation and execution.
-
-**Why this priority**: This is the fundamental entry point for the entire system. Without the ability to upload and validate skill packages, no other functionality can work. It enables the core use case of testing skills before deployment.
-
-**Independent Test**: Can be fully tested by uploading various skill packages (valid and invalid) and verifying validation feedback. Delivers immediate value by catching specification errors early.
-
-**Acceptance Scenarios**:
-
-1. **Given** a developer has a valid skill package (zip file with SKILL.md and proper structure), **When** they upload it through the web interface, **Then** the system validates the package and displays a success message with the skill name and description extracted from the YAML frontmatter.
-
-2. **Given** a developer uploads a skill package missing the SKILL.md file, **When** the upload completes, **Then** the system displays a clear error message indicating "SKILL.md file is required" with guidance on the expected structure.
-
-3. **Given** a developer uploads a skill package with invalid YAML frontmatter (missing name or description), **When** the upload completes, **Then** the system displays specific validation errors indicating which required fields are missing.
-
-4. **Given** a developer uploads a file that is not a valid zip archive, **When** the upload is attempted, **Then** the system rejects the upload with an appropriate error message before processing.
+**功能分支**: `001-skills-runtime`
+**创建日期**: 2026-01-06
+**状态**: 草稿
+**输入**: 用户描述："为 claude skills(https://github.com/anthropics/skills) 智能体实现一个运行时框架和测试web app，web app 支持 claude skills zip 包上传、内容检验（必须符合 claude skills 规范）、目录树和文件内容预览、内容修改和重新打包；claude skill 运行、运行日志和结果查看等；claude skills 运行时框架是核心，可以基于开源的框架（比如业界成熟的智能体框架上开发，这个技术方案是关键，需要深入调研），保证其运行效果不弱于 claude code, 同时不能引入不必要的复杂度"
 
 ---
 
-### User Story 2 - Execute Skill and View Results (Priority: P1)
+## 系统架构概述
 
-A developer wants to run a skill against a test prompt and see the execution results, including logs and outputs.
+本系统由两个核心组件构成：
 
-**Why this priority**: This is the second core use case after upload. Developers need to verify that their skills work correctly with real LLM interactions before deployment.
+1. **Claude Skills 运行时引擎**（核心层）：独立的技能执行引擎，负责解析技能定义、构建智能体上下文、协调 LLM 交互、管理执行生命周期。可被多种客户端集成使用。
 
-**Independent Test**: Can be fully tested by running a skill with test input and observing logs and outputs. Delivers the primary value of skill testing.
-
-**Acceptance Scenarios**:
-
-1. **Given** a validated skill is loaded, **When** the developer enters a test prompt and clicks "Run", **Then** the skill execution begins and a real-time log stream displays progress.
-
-2. **Given** a skill is executing, **When** execution completes successfully, **Then** the final output is displayed prominently along with execution statistics (duration, token usage).
-
-3. **Given** a skill is executing, **When** an error occurs during execution, **Then** the error is displayed clearly with relevant context from the execution log.
-
-4. **Given** a skill is executing, **When** the developer clicks "Stop", **Then** execution is terminated gracefully and the partial log is preserved.
-
-5. **Given** execution has completed (success or failure), **When** the developer views the results, **Then** they can see the complete execution log, input prompt, and any generated outputs.
+2. **测试 Web 应用**（应用层）：基于运行时引擎构建的可视化测试工具，提供技能包管理、在线编辑、执行监控等功能。
 
 ---
 
-### User Story 3 - Browse and Preview Skill Contents (Priority: P2)
+## 用户场景与测试 *(必填)*
 
-A developer wants to explore the contents of an uploaded skill package to understand its structure and review individual files.
+### 第一部分：运行时引擎用户故事
 
-**Why this priority**: After upload and validation, developers need to inspect the contents before running the skill. This builds confidence and allows identification of issues before execution.
-
-**Independent Test**: Can be fully tested by uploading a skill package and navigating through its directory tree, opening various files. Delivers value by providing visibility into skill structure.
-
-**Acceptance Scenarios**:
-
-1. **Given** a validated skill package is loaded, **When** the developer views the skill details page, **Then** a hierarchical directory tree displays all files and folders within the package.
-
-2. **Given** a directory tree is displayed, **When** the developer clicks on a file, **Then** the file content is displayed in a syntax-highlighted viewer appropriate for the file type (markdown, code, etc.).
-
-3. **Given** a directory tree is displayed, **When** the developer expands a folder, **Then** the folder contents are revealed without page reload.
+> 运行时引擎的"用户"包括：集成开发者（通过编程接口使用引擎）、Web 应用（作为客户端调用引擎）、未来的 CI/CD 系统或其他自动化工具。
 
 ---
 
-### User Story 4 - Edit and Repackage Skills (Priority: P3)
+### 用户故事 R1 - 加载并解析技能定义 (优先级: P0)
 
-A developer wants to make modifications to skill files directly in the web interface and download an updated package.
+集成开发者希望将技能包加载到运行时引擎中，并获得解析后的技能定义对象，以便进行后续执行。
 
-**Why this priority**: This enables rapid iteration without leaving the web app. Developers can fix issues found during validation or testing without external tools.
+**优先级说明**: 这是运行时引擎的最基础能力。没有技能加载和解析，引擎无法执行任何操作。这是所有其他功能的前提。
 
-**Independent Test**: Can be fully tested by editing a file, saving changes, and downloading the repackaged skill. Delivers value by enabling in-browser skill development workflow.
+**独立测试**: 可以通过编程方式加载各种技能包（有效和无效的），验证解析结果或错误信息。无需 UI 即可完整测试。
 
-**Acceptance Scenarios**:
+**验收场景**:
 
-1. **Given** a file is displayed in the viewer, **When** the developer clicks an "Edit" button, **Then** the viewer transforms into an editable text area with the current content.
+1. **假设** 开发者有一个包含有效 SKILL.md 的技能目录，**当** 调用引擎的加载接口时，**那么** 引擎返回包含技能名称、描述、指令内容的结构化定义对象。
 
-2. **Given** a file is being edited, **When** the developer saves changes, **Then** the changes are persisted in the current session and validation is re-run automatically.
+2. **假设** 开发者提供的技能目录缺少 SKILL.md，**当** 调用加载接口时，**那么** 引擎抛出明确的错误，指明缺少必需文件。
 
-3. **Given** modifications have been made to one or more files, **When** the developer clicks "Download Package", **Then** a new zip file is generated containing all current files with changes applied.
+3. **假设** SKILL.md 的 YAML frontmatter 格式错误，**当** 调用加载接口时，**那么** 引擎返回详细的解析错误，包含行号和具体问题描述。
 
-4. **Given** edits have been made but not saved, **When** the developer attempts to navigate away, **Then** a confirmation prompt warns about unsaved changes.
-
----
-
-### User Story 5 - Manage Execution History (Priority: P4)
-
-A developer wants to review past executions to compare results and track improvements.
-
-**Why this priority**: This provides valuable context for iterative development but is not essential for basic testing functionality.
-
-**Independent Test**: Can be tested by running multiple executions and navigating through execution history. Delivers value by enabling comparison and regression testing.
-
-**Acceptance Scenarios**:
-
-1. **Given** multiple skill executions have been performed, **When** the developer views the execution history, **Then** a list of past executions is displayed with timestamps, status, and skill name.
-
-2. **Given** an execution history list is displayed, **When** the developer selects a past execution, **Then** the full details (input, output, logs) are displayed.
+4. **假设** 技能包包含 resources 和 scripts 子目录，**当** 加载完成时，**那么** 引擎正确识别并索引这些辅助资源供后续执行使用。
 
 ---
 
-### Edge Cases
+### 用户故事 R2 - 执行技能与智能体循环 (优先级: P0)
 
-- What happens when an uploaded zip file is corrupted or cannot be extracted?
-  - System displays a clear error message indicating the file is corrupted and cannot be processed.
+集成开发者希望使用加载的技能定义执行智能体任务，引擎应自动处理上下文注入、LLM 调用、工具执行等完整循环。
 
-- How does the system handle extremely large skill packages (>100MB)?
-  - System enforces a reasonable size limit (default 50MB) and displays an error for oversized packages.
+**优先级说明**: 这是运行时引擎的核心价值。技能执行必须达到与 Claude Code 相当的效果，包括上下文管理、多轮对话、工具调用等能力。
 
-- What happens when the LLM service is unavailable during skill execution?
-  - System displays a connectivity error with retry option and preserves the input for when service resumes.
+**独立测试**: 可以通过编程方式启动技能执行，提供测试提示词，验证执行结果和日志。无需 UI 即可完整测试。
 
-- How does the system handle skill execution that runs for an extended period?
-  - System implements a configurable timeout (default 5 minutes) and notifies the user when approaching the limit.
+**验收场景**:
 
-- What happens when multiple files have the same name in different folders during repackaging?
-  - System preserves the directory structure exactly as in the original package.
+1. **假设** 已加载一个有效技能，**当** 开发者调用执行接口并提供用户提示词时，**那么** 引擎将技能指令注入系统提示，调用 LLM，返回响应结果。
 
-- How does the system handle binary files (images, etc.) in skill packages?
-  - Binary files are displayed as non-editable with file type and size information; they are preserved during repackaging.
+2. **假设** 技能执行过程中 LLM 请求使用工具，**当** 引擎接收到工具调用请求时，**那么** 引擎在隔离环境中执行工具，将结果反馈给 LLM，继续对话循环。
 
-## Requirements *(mandatory)*
+3. **假设** 技能执行涉及多轮对话，**当** 每轮对话完成时，**那么** 引擎正确维护对话历史和上下文状态。
 
-### Functional Requirements
+4. **假设** 技能定义中引用了 resources 目录的文件，**当** LLM 需要访问这些资源时，**那么** 引擎能够提供资源内容作为上下文。
 
-**Skill Package Management**
+5. **假设** 技能定义中包含 scripts 目录的可执行脚本，**当** LLM 请求执行脚本时，**那么** 引擎在受控环境中执行脚本并返回结果。
 
-- **FR-001**: System MUST accept skill packages as zip files through a file upload interface.
-- **FR-002**: System MUST validate that uploaded packages contain a SKILL.md file at the root or recognized location.
-- **FR-003**: System MUST parse SKILL.md YAML frontmatter and validate required fields (name, description).
-- **FR-004**: System MUST provide clear, actionable validation error messages for specification violations.
-- **FR-005**: System MUST display the skill package contents as an interactive directory tree.
-- **FR-006**: System MUST support viewing file contents with appropriate syntax highlighting.
-- **FR-007**: System MUST support in-browser editing of text-based files within the skill package.
-- **FR-008**: System MUST allow downloading modified skill packages as new zip files.
-- **FR-009**: System MUST re-validate skill packages after any file modifications.
+---
 
-**Skill Execution Runtime**
+### 用户故事 R3 - 实时执行监控与日志 (优先级: P1)
 
-- **FR-010**: System MUST provide a runtime environment capable of executing Claude Skills according to the official specification.
-- **FR-011**: System MUST inject skill instructions into the LLM context when executing a skill.
-- **FR-012**: System MUST support user-provided test prompts as input for skill execution.
-- **FR-013**: System MUST stream execution logs in real-time to the user interface.
-- **FR-014**: System MUST capture and display skill execution results including LLM responses.
-- **FR-015**: System MUST support cancellation of in-progress skill executions.
-- **FR-016**: System MUST enforce execution timeouts to prevent runaway processes.
-- **FR-017**: System MUST isolate skill executions to prevent cross-contamination between different skill runs.
+集成开发者希望在技能执行过程中实时获取执行状态和日志，以便监控进度和调试问题。
 
-**Execution History**
+**优先级说明**: 实时监控对于长时间运行的技能执行至关重要，也是调试和优化技能的关键能力。
 
-- **FR-018**: System MUST persist execution logs and results for later review within the session.
-- **FR-019**: System MUST allow users to browse execution history.
-- **FR-020**: System MUST display execution metadata (timestamp, duration, status) in history views.
+**独立测试**: 可以通过订阅执行事件流，验证事件的及时性和完整性。
 
-### Key Entities
+**验收场景**:
 
-- **SkillPackage**: Represents an uploaded skill package; contains package metadata, validation status, file tree structure, and original/modified file contents.
+1. **假设** 技能正在执行，**当** 引擎与 LLM 交互时，**那么** 引擎通过回调或事件流实时推送执行状态（开始、进行中、完成、失败）。
 
-- **SkillDefinition**: Parsed representation of SKILL.md; contains name, description, instructions, and references to resources and scripts.
+2. **假设** 技能正在执行，**当** 产生日志信息时，**那么** 每条日志包含时间戳、级别、来源组件和消息内容。
 
-- **Execution**: Represents a single skill run; contains input prompt, output result, execution logs, start/end timestamps, status (running/completed/failed/cancelled), and resource usage metrics.
+3. **假设** 技能执行过程中发生错误，**当** 错误被捕获时，**那么** 引擎推送包含错误类型、消息、堆栈跟踪的详细错误事件。
 
-- **ExecutionLog**: Time-ordered collection of log entries for an execution; each entry has timestamp, level (info/warn/error), and message content.
+4. **假设** LLM 返回流式响应，**当** 响应逐步到达时，**那么** 引擎支持将响应片段实时推送给调用方。
 
-## Success Criteria *(mandatory)*
+---
 
-### Measurable Outcomes
+### 用户故事 R4 - 执行生命周期管理 (优先级: P1)
 
-- **SC-001**: Users can upload and validate a skill package in under 10 seconds for packages up to 10MB.
+集成开发者希望能够控制技能执行的生命周期，包括取消执行、设置超时、查询状态等。
 
-- **SC-002**: 95% of validation errors are resolved by users on first attempt after reading the error message (indicating clear, actionable feedback).
+**优先级说明**: 生命周期管理确保系统资源得到合理使用，防止失控进程，支持优雅中断。
 
-- **SC-003**: Users can navigate to and preview any file in a skill package within 3 clicks from the main view.
+**独立测试**: 可以通过启动执行后调用取消接口，验证执行被正确中止。
 
-- **SC-004**: Skill execution results (or errors) are visible to users within 2 seconds of execution completion.
+**验收场景**:
 
-- **SC-005**: Real-time log updates appear in the UI within 500ms of being generated during execution.
+1. **假设** 技能正在执行，**当** 开发者调用取消接口时，**那么** 引擎优雅地终止执行，清理资源，返回部分结果和日志。
 
-- **SC-006**: Users can complete the full test cycle (upload → validate → edit → run → review results) in under 5 minutes for a simple skill.
+2. **假设** 技能执行超过配置的超时时间，**当** 超时发生时，**那么** 引擎自动终止执行并返回超时错误。
 
-- **SC-007**: System maintains execution history for at least 100 recent executions per session.
+3. **假设** 多个技能执行同时进行，**当** 查询执行状态时，**那么** 引擎返回每个执行的独立状态信息。
 
-- **SC-008**: Modified skill packages can be downloaded and re-uploaded with all changes preserved.
+4. **假设** 技能执行已完成，**当** 查询执行结果时，**那么** 引擎返回完整的输入、输出、日志和资源使用统计。
 
-## Assumptions
+---
 
-- Users have valid LLM provider credentials or the system has a configured default provider.
-- Skill packages follow the Claude Skills specification format (SKILL.md with YAML frontmatter).
-- The web application is accessed via modern browsers (Chrome, Firefox, Safari, Edge - latest 2 versions).
-- Network connectivity is available for LLM API calls during skill execution.
-- Session storage is sufficient for managing skill packages and execution history within a single browser session (persistent storage across sessions is a future enhancement).
+### 用户故事 R5 - 执行环境隔离 (优先级: P1)
 
-## Out of Scope
+集成开发者希望每次技能执行都在隔离的环境中进行，防止不同执行之间的状态污染和安全问题。
 
-- Multi-user collaboration on skill packages
-- Version control integration for skill packages
-- Deployment of skills to production Claude environments
-- Skill marketplace or discovery features
-- Mobile-optimized interface
-- Offline skill execution capabilities
+**优先级说明**: 隔离是保证多租户安全性和执行可重复性的基础要求。
+
+**独立测试**: 可以通过并行执行多个技能，验证它们的状态和文件系统互不影响。
+
+**验收场景**:
+
+1. **假设** 同时执行两个不同的技能，**当** 一个技能修改了工作目录中的文件时，**那么** 另一个技能的工作目录不受影响。
+
+2. **假设** 技能执行中设置了环境变量，**当** 执行完成后，**那么** 这些环境变量不会泄漏到其他执行或宿主环境。
+
+3. **假设** 技能执行失败并产生了临时文件，**当** 执行结束时，**那么** 引擎自动清理这些临时资源。
+
+---
+
+### 用户故事 R6 - LLM 提供商适配 (优先级: P2)
+
+集成开发者希望运行时引擎支持配置不同的 LLM 提供商，而不仅限于特定供应商。
+
+**优先级说明**: 灵活的提供商支持增加了系统的适用范围，但初期可以优先支持 Claude API。
+
+**独立测试**: 可以通过配置不同的提供商凭证，验证引擎能够正确路由请求。
+
+**验收场景**:
+
+1. **假设** 开发者配置了 Claude API 凭证，**当** 执行技能时，**那么** 引擎使用 Claude API 完成 LLM 调用。
+
+2. **假设** 开发者需要切换提供商，**当** 更新配置时，**那么** 引擎无需代码修改即可使用新提供商。
+
+3. **假设** LLM 调用失败，**当** 发生可重试错误时，**那么** 引擎按配置的重试策略自动重试。
+
+---
+
+### 第二部分：测试 Web 应用用户故事
+
+> 测试 Web 应用的用户是技能开发者，他们通过浏览器界面与系统交互。
+
+---
+
+### 用户故事 W1 - 上传并验证技能包 (优先级: P1)
+
+开发者希望通过将自己创建的 Claude Skill 上传到 Web 应用进行验证和执行测试。
+
+**优先级说明**: 这是 Web 应用的基础入口。没有上传和验证技能包的能力，其他 Web 功能都无法运作。
+
+**独立测试**: 可以通过上传各种技能包（有效和无效的）并验证反馈信息来完成完整测试。通过尽早发现规格错误来提供即时价值。
+
+**验收场景**:
+
+1. **假设** 开发者有一个有效的技能包（包含 SKILL.md 和正确结构的 zip 文件），**当** 他们通过 Web 界面上传时，**那么** 系统验证该包并显示成功消息，包含从 YAML frontmatter 中提取的技能名称和描述。
+
+2. **假设** 开发者上传了一个缺少 SKILL.md 文件的技能包，**当** 上传完成时，**那么** 系统显示清晰的错误消息，指出"需要 SKILL.md 文件"并提供预期结构的指导。
+
+3. **假设** 开发者上传了一个 YAML frontmatter 无效（缺少 name 或 description）的技能包，**当** 上传完成时，**那么** 系统显示具体的验证错误，指出哪些必填字段缺失。
+
+4. **假设** 开发者上传了一个不是有效 zip 存档的文件，**当** 尝试上传时，**那么** 系统在处理之前以适当的错误消息拒绝上传。
+
+---
+
+### 用户故事 W2 - 在 Web 界面执行技能并查看结果 (优先级: P1)
+
+开发者希望在 Web 界面中针对测试提示词运行技能，并实时查看执行结果，包括日志和输出。
+
+**优先级说明**: 这是 Web 应用的核心价值。开发者需要在部署前验证他们的技能能否正常工作。
+
+**独立测试**: 可以通过使用测试输入运行技能并观察日志和输出来完成完整测试。
+
+**验收场景**:
+
+1. **假设** 已加载一个经过验证的技能，**当** 开发者输入测试提示词并点击"运行"时，**那么** 技能开始执行，实时日志流显示进度。
+
+2. **假设** 技能正在执行，**当** 执行成功完成时，**那么** 最终输出与执行统计信息（持续时间、token 使用量）一起醒目显示。
+
+3. **假设** 技能正在执行，**当** 执行过程中发生错误时，**那么** 错误清晰显示，并包含执行日志中的相关上下文。
+
+4. **假设** 技能正在执行，**当** 开发者点击"停止"时，**那么** 执行被优雅终止，部分日志被保留。
+
+5. **假设** 执行已完成（成功或失败），**当** 开发者查看结果时，**那么** 他们可以看到完整的执行日志、输入提示词和任何生成的输出。
+
+---
+
+### 用户故事 W3 - 浏览和预览技能内容 (优先级: P2)
+
+开发者希望探索已上传技能包的内容，以了解其结构并查看各个文件。
+
+**优先级说明**: 在上传和验证之后，开发者需要在运行技能之前检查其内容。这可以建立信心，并允许在执行前识别问题。
+
+**独立测试**: 可以通过上传技能包并在其目录树中导航、打开各种文件来完成完整测试。
+
+**验收场景**:
+
+1. **假设** 已加载一个经过验证的技能包，**当** 开发者查看技能详情页面时，**那么** 显示包含包内所有文件和文件夹的层级目录树。
+
+2. **假设** 目录树已显示，**当** 开发者点击一个文件时，**那么** 文件内容以适合文件类型（markdown、代码等）的语法高亮查看器显示。
+
+3. **假设** 目录树已显示，**当** 开发者展开一个文件夹时，**那么** 文件夹内容在无需页面刷新的情况下展现。
+
+---
+
+### 用户故事 W4 - 编辑和重新打包技能 (优先级: P3)
+
+开发者希望直接在 Web 界面中修改技能文件并下载更新后的包。
+
+**优先级说明**: 这可以实现快速迭代而无需离开 Web 应用。开发者可以修复在验证或测试中发现的问题，无需使用外部工具。
+
+**独立测试**: 可以通过编辑文件、保存更改并下载重新打包的技能来完成完整测试。
+
+**验收场景**:
+
+1. **假设** 文件正在查看器中显示，**当** 开发者点击"编辑"按钮时，**那么** 查看器转变为包含当前内容的可编辑文本区域。
+
+2. **假设** 文件正在被编辑，**当** 开发者保存更改时，**那么** 更改被持久化到当前会话中，验证自动重新运行。
+
+3. **假设** 对一个或多个文件进行了修改，**当** 开发者点击"下载包"时，**那么** 生成一个包含所有应用更改的当前文件的新 zip 文件。
+
+4. **假设** 进行了编辑但未保存，**当** 开发者尝试离开页面时，**那么** 确认提示警告有未保存的更改。
+
+---
+
+### 用户故事 W5 - 管理执行历史 (优先级: P4)
+
+开发者希望回顾过去的执行记录，以比较结果并跟踪改进。
+
+**优先级说明**: 这为迭代开发提供了有价值的上下文，但对于基本测试功能来说不是必需的。
+
+**独立测试**: 可以通过运行多次执行并在执行历史中导航来测试。
+
+**验收场景**:
+
+1. **假设** 已执行多次技能运行，**当** 开发者查看执行历史时，**那么** 显示包含时间戳、状态和技能名称的过去执行列表。
+
+2. **假设** 执行历史列表已显示，**当** 开发者选择一个过去的执行时，**那么** 显示完整详情（输入、输出、日志）。
+
+---
+
+### 边界情况
+
+**运行时引擎边界情况**:
+
+- 当技能定义中的指令超过 LLM 上下文窗口限制时会发生什么？
+  - 引擎检测并报告上下文溢出错误，建议拆分或精简技能指令。
+
+- 当技能脚本执行时间过长或陷入死循环时会发生什么？
+  - 引擎对脚本执行实施独立超时，超时后强制终止并报告错误。
+
+- 当 LLM 返回格式异常的工具调用请求时会发生什么？
+  - 引擎进行格式校验，对无效请求返回错误信息给 LLM 进行重试。
+
+- 当技能执行过程中网络连接中断时会发生什么？
+  - 引擎捕获网络错误，按重试策略尝试恢复，最终失败时保存当前状态供后续分析。
+
+**Web 应用边界情况**:
+
+- 当上传的 zip 文件损坏或无法解压时会发生什么？
+  - 系统显示清晰的错误消息，指出文件已损坏且无法处理。
+
+- 系统如何处理超大技能包（>100MB）？
+  - 系统强制执行合理的大小限制（默认 50MB），并为超大包显示错误。
+
+- 当技能执行期间 LLM 服务不可用时会发生什么？
+  - 系统显示连接错误并提供重试选项，保留输入以便服务恢复时使用。
+
+- 系统如何处理运行时间过长的技能执行？
+  - 系统实现可配置的超时时间（默认 5 分钟），并在接近限制时通知用户。
+
+- 重新打包时不同文件夹中有同名文件会发生什么？
+  - 系统完全按照原始包的目录结构保留。
+
+- 系统如何处理技能包中的二进制文件（图片等）？
+  - 二进制文件显示为不可编辑，包含文件类型和大小信息；在重新打包时被保留。
+
+---
+
+## 需求 *(必填)*
+
+### 功能需求
+
+**运行时引擎核心能力**
+
+- **FR-R01**: 引擎必须能够从目录或 zip 包加载技能定义。
+- **FR-R02**: 引擎必须解析 SKILL.md 的 YAML frontmatter 并提取 name、description 等必填字段。
+- **FR-R03**: 引擎必须验证技能定义的完整性和格式正确性。
+- **FR-R04**: 引擎必须将技能指令作为系统提示注入 LLM 上下文。
+- **FR-R05**: 引擎必须实现完整的智能体循环（用户输入 → LLM 调用 → 工具执行 → 结果反馈）。
+- **FR-R06**: 引擎必须支持 LLM 流式响应的实时处理和转发。
+- **FR-R07**: 引擎必须提供执行事件的订阅机制（开始、进行中、完成、失败、日志）。
+- **FR-R08**: 引擎必须支持执行取消和优雅终止。
+- **FR-R09**: 引擎必须实现执行超时机制。
+- **FR-R10**: 引擎必须为每次执行提供隔离的运行环境。
+- **FR-R11**: 引擎必须支持技能包中 resources 目录资源的读取。
+- **FR-R12**: 引擎必须支持技能包中 scripts 目录脚本的安全执行。
+- **FR-R13**: 引擎必须提供可扩展的 LLM 提供商适配接口。
+- **FR-R14**: 引擎必须记录详细的执行日志，包含时间戳、级别和来源。
+
+**Web 应用技能包管理**
+
+- **FR-W01**: 系统必须通过文件上传界面接受 zip 文件格式的技能包。
+- **FR-W02**: 系统必须调用运行时引擎验证上传的技能包。
+- **FR-W03**: 系统必须将技能包内容显示为交互式目录树。
+- **FR-W04**: 系统必须支持以适当的语法高亮查看文件内容。
+- **FR-W05**: 系统必须支持在浏览器内编辑技能包中的文本文件。
+- **FR-W06**: 系统必须允许将修改后的技能包下载为新的 zip 文件。
+- **FR-W07**: 系统必须在任何文件修改后重新验证技能包。
+
+**Web 应用执行管理**
+
+- **FR-W08**: 系统必须提供输入测试提示词的界面。
+- **FR-W09**: 系统必须调用运行时引擎执行技能并显示结果。
+- **FR-W10**: 系统必须实时显示执行日志流。
+- **FR-W11**: 系统必须支持通过界面取消正在进行的执行。
+- **FR-W12**: 系统必须在会话内持久化执行历史供后续查看。
+- **FR-W13**: 系统必须显示执行元数据（时间戳、持续时间、状态、token 使用量）。
+
+---
+
+### 核心实体
+
+**运行时引擎实体**
+
+- **SkillDefinition（技能定义）**: SKILL.md 的解析表示；包含名称、描述、指令内容、资源索引和脚本索引。
+
+- **ExecutionContext（执行上下文）**: 单次技能执行的运行时状态；包含技能定义引用、对话历史、环境变量、工作目录和资源访问器。
+
+- **ExecutionResult（执行结果）**: 执行完成后的结果对象；包含最终输出、完整日志、资源使用统计和执行状态。
+
+- **LLMProvider（LLM 提供商）**: LLM 服务的抽象接口；定义调用方法、流式处理和错误处理规范。
+
+**Web 应用实体**
+
+- **SkillPackage（技能包）**: 表示已上传的技能包；包含包元数据、验证状态、文件树结构以及原始/修改后的文件内容。
+
+- **Execution（执行记录）**: 表示单次技能运行的 Web 层记录；包含输入提示词、输出结果、执行日志、时间戳和状态。
+
+- **ExecutionLog（执行日志）**: 执行的时间顺序日志条目集合；每个条目包含时间戳、级别（info/warn/error）和消息内容。
+
+---
+
+## 成功标准 *(必填)*
+
+### 可衡量的成果
+
+**运行时引擎指标**
+
+- **SC-R01**: 引擎执行简单技能（单轮对话）的端到端延迟与直接 LLM API 调用相比增加不超过 200ms。
+
+- **SC-R02**: 引擎能够正确执行 Anthropic 官方技能仓库中 90% 以上的示例技能。
+
+- **SC-R03**: 引擎在接收到取消请求后 1 秒内完成执行终止。
+
+- **SC-R04**: 并发执行 10 个技能时，各执行之间无状态泄漏或干扰。
+
+- **SC-R05**: 执行日志事件从产生到可被订阅方接收的延迟不超过 100ms。
+
+**Web 应用指标**
+
+- **SC-W01**: 用户可以在 10 秒内完成最大 10MB 技能包的上传和验证。
+
+- **SC-W02**: 95% 的验证错误在用户阅读错误消息后首次尝试即可解决。
+
+- **SC-W03**: 用户可以在主视图的 3 次点击内导航到并预览技能包中的任何文件。
+
+- **SC-W04**: 技能执行结果（或错误）在执行完成后 2 秒内对用户可见。
+
+- **SC-W05**: 实时日志更新在执行期间生成后 500 毫秒内出现在 UI 中。
+
+- **SC-W06**: 用户可以在 5 分钟内完成简单技能的完整测试周期（上传 → 验证 → 编辑 → 运行 → 查看结果）。
+
+---
+
+## 假设
+
+- 用户拥有有效的 LLM 提供商凭证，或系统已配置默认提供商。
+- 技能包遵循 Claude Skills 规范格式（带有 YAML frontmatter 的 SKILL.md）。
+- Web 应用通过现代浏览器访问（Chrome、Firefox、Safari、Edge - 最新 2 个版本）。
+- 技能执行期间 LLM API 调用需要网络连接。
+- 会话存储足以在单个浏览器会话内管理技能包和执行历史（跨会话持久存储是未来增强功能）。
+- 运行时引擎将基于成熟的开源智能体框架构建，以降低开发复杂度并确保质量。
+
+---
+
+## 超出范围
+
+- 技能包的多用户协作
+- 技能包的版本控制集成
+- 将技能部署到生产 Claude 环境
+- 技能市场或发现功能
+- 移动端优化界面
+- 离线技能执行功能
+- 运行时引擎的 CLI 工具（可作为后续增强）
+- 多租户隔离和权限管理
