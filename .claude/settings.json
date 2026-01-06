@@ -1,0 +1,44 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh:*)",
+      "Bash(git:*)",
+      "Bash(npm:*)",
+      "Bash(node:*)",
+      "Bash(mkdir:*)",
+      "Bash(npx:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(mv:*)",
+      "Bash(echo:*)",
+      "Bash(sed:*)",
+      "Bash(curl:*)",
+      "Bash(make:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(poetry:*)",
+      "Bash(docker:*)",
+      "Read(*)",
+      "Write(*)",
+      "Edit(*)",
+      "MultiEdit(*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "mcp__chrome-devtools__*",
+      "mcp__puppeteer__*",
+      "mcp__context7__*",
+      "Skill(*)"
+    ],
+    "deny": [],
+    "ask": []
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "context7",
+    "chrome-devtools",
+    "sequential-thinking",
+    "puppeteer"
+  ]
+}
