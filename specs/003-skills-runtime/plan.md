@@ -49,15 +49,33 @@
 
 本项目采用 **控制平面 + 数据平面** 分离架构：
 
-| 服务类型 | 服务 | 生命周期 |
-|---------|------|--------|
-| **常驻服务** | Frontend, API Gateway, Task Worker, PostgreSQL, Redis, MinIO | 持续运行 |
-| **临时服务** | Skill Runner (opencode + 脚本执行环境) | 按任务创建/销毁 |
+| 服务类型 | 服务 | 生命周期 | 本期实现 |
+|---------|------|--------|---------|
+| **常驻服务** | Frontend | 持续运行 | ✅ |
+| **常驻服务** | Backend (API + Orchestrator) | 持续运行 | ✅ 单进程 |
+| **临时服务** | Skill Runner | 按任务创建/销毁 | ✅ |
+| **存储** | SQLite (嵌入式) | 随应用启停 | ✅ |
+| **基础设施** | Redis, MinIO | 持续运行 | ⏳ 架构支持 |
 
-**关键设计决策**:
-- opencode Server 与 Skill 脚本在 **同一个 Runner 容器** 内执行
-- 每次技能执行创建独立容器，完成后销毁，确保隔离
-- 使用预热容器池优化冷启动延迟
+**本期实现范围**:
+- Frontend + Backend (单进程，包含 API 路由和任务编排) + Skill Runner
+- SQLite 嵌入式存储（技能包元数据 + 执行历史）
+- 文件系统存储技能包临时文件
+- Backend 内同步调用 Skill Runner（无需外部消息队列）
+
+**基础设施简化策略**:
+| 组件 | 生产架构 | 本期简化 |
+|------|---------|---------|
+| 任务队列 | Redis | 内存队列 / 同步调用 |
+| 文件存储 | MinIO / S3 | 本地文件系统 |
+| 数据库 | PostgreSQL | SQLite |
+
+**架构可扩展性** (未来):
+- 拆分 Backend 为 API Gateway + Task Orchestrator
+- 替换 SQLite 为 PostgreSQL 实现多实例部署
+- 引入 Redis 实现分布式任务队列
+- 引入 MinIO 实现对象存储
+- 容器化 Skill Runner 实现隔离执行
 
 详细部署架构设计参见 [architecture.md](./architecture.md)。
 

@@ -112,7 +112,7 @@
 - [ ] T047 [US1] 在 `backend/src/utils/file_utils.py` 中创建文件类型检测工具（二进制检测，从扩展名判断文件类型）
 - [ ] T048 [US1] 在 `backend/src/services/skill_storage.py` 中创建内存技能包存储服务
 - [ ] T049 [US1] 在 `backend/src/services/skill_service.py` 中创建技能包管理服务（依赖 T046, T047, T048）
-- [ ] T050 [US1] 在 `backend/src/api/skills.py` 中实现 POST /skills/upload 端点（依赖 T049）
+- [ ] T050 [US1] 在 `backend/src/api/skills.py` 中实现 POST /skills/upload 端点（依赖 T049）；必须验证文件大小不超过 10MB，超出返回 413 错误
 - [ ] T051 [US1] 在 `backend/src/api/skills.py` 中实现 GET /skills/{skill_id} 端点
 - [ ] T052 [US1] 在 `backend/src/api/skills.py` 中实现 DELETE /skills/{skill_id} 端点
 - [ ] T053 [P] [US1] 在 `frontend/src/components/upload/UploadZone.tsx` 中创建带有拖放功能的 UploadZone 组件
@@ -146,7 +146,7 @@
 - [ ] T065 [US2] 在 `backend/src/api/skills.py` 中实现 GET /skills/{skill_id}/files/{file_path} 端点
 - [ ] T066 [P] [US2] 在 `frontend/src/components/explorer/FileTree.tsx` 中使用 react-arborist 创建 FileTree 组件
 - [ ] T067 [P] [US2] 在 `frontend/src/components/explorer/FileTreeNode.tsx` 中创建 FileTreeNode 组件
-- [ ] T068 [US2] 在 `frontend/src/components/explorer/FilePreview.tsx` 中创建带有语法高亮的 FilePreview 组件
+- [ ] T068 [US2] 在 `frontend/src/components/explorer/FilePreview.tsx` 中创建带有语法高亮的 FilePreview 组件；对于二进制文件显示"不可预览"提示和文件大小信息
 - [ ] T069 [US2] 在 `frontend/src/components/explorer/SkillMetadataViewer.tsx` 中创建 SkillMetadataViewer 组件（结构化 YAML 显示）
 - [ ] T070 [US2] 在 `frontend/src/hooks/useFileExplorer.ts` 中创建 useFileExplorer hook
 - [ ] T071 [US2] 在 `frontend/src/pages/MainPage.tsx` 中集成浏览器组件
@@ -204,7 +204,7 @@
 ### 用户故事 4 的实现
 
 - [ ] T093 [US4] 在 `backend/src/services/execution_storage.py` 中创建执行会话存储服务
-- [ ] T094 [US4] 在 `backend/src/services/execution_service.py` 中创建技能执行服务（与 opencode 客户端集成）
+- [ ] T094 [US4] 在 `backend/src/services/execution_service.py` 中创建技能执行服务（与 opencode 客户端集成）；必须实现 5 分钟执行超时，超时后自动终止并返回超时错误
 - [ ] T095 [US4] 在 `backend/src/api/executions.py` 中实现 POST /skills/{skill_id}/execute 端点（依赖 T094）
 - [ ] T096 [US4] 在 `backend/src/api/executions.py` 中实现 GET /executions/{session_id}/stream SSE 端点
 - [ ] T097 [US4] 在 `backend/src/api/executions.py` 中实现 POST /executions/{session_id}/cancel 端点

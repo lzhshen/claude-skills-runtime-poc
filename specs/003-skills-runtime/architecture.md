@@ -10,6 +10,8 @@
 2. opencode Server 与 Skill 脚本的执行环境关系
 3. 如何实现安全隔离和资源控制
 
+> **本期实现说明**: 本文档描述的是完整生产架构。本期 MVP 采用简化实现，详见 [plan.md](./plan.md) 中的"基础设施简化策略"。
+
 ---
 
 ## 架构目标
@@ -104,11 +106,12 @@
 | 服务 | 职责 | 技术选型 | 部署特点 |
 |------|------|---------|---------|
 | **Frontend** | Web UI，用户交互 | React + Vite | 静态资源，可 CDN 加速 |
-| **API Gateway** | 请求路由、认证、技能包管理 | Python FastAPI | 无状态，多副本水平扩展 |
-| **Task Orchestrator** | 创建/监控 Runner、任务队列消费 | Celery Worker | 可多 Worker 并行 |
-| **PostgreSQL** | 技能元数据、执行历史持久化 | PostgreSQL 15+ | 有状态，需备份 |
-| **Redis** | 任务队列、会话缓存、实时事件 | Redis 7+ | 有状态，可集群 |
-| **Object Storage** | 技能包文件存储 | MinIO / S3 | 对象存储 |
+| **Backend** | API 路由、技能包管理、任务编排 | Python FastAPI | 本期单进程；生产可拆分 |
+| **PostgreSQL** | 技能元数据、执行历史持久化 | PostgreSQL 15+ | 本期用 SQLite 替代 |
+| **Redis** | 任务队列、会话缓存、实时事件 | Redis 7+ | 本期用内存队列替代 |
+| **Object Storage** | 技能包文件存储 | MinIO / S3 | 本期用本地文件系统替代 |
+
+> **本期简化**: Backend 合并了 API Gateway 和 Task Orchestrator 功能，单进程部署。
 
 ### 临时服务 (Ephemeral Services)
 
@@ -652,9 +655,12 @@ Docker Compose               Kubernetes                      Multi-Region K8s
 
 | 问题 | 答案 |
 |------|------|
-| **常驻服务** | Frontend, API Gateway, Task Worker, PostgreSQL, Redis, MinIO |
+| **常驻服务** | Frontend, Backend (API + Orchestrator) |
+| **常驻服务 (生产扩展)** | PostgreSQL, Redis, MinIO |
 | **临时服务** | Skill Runner (opencode + 脚本执行环境) |
 | **opencode 和脚本同一环境？** | ✅ 是的，在同一个 Runner 容器内 |
 | **Runner 生命周期** | 任务开始创建 → 执行完成/超时/取消后销毁 |
 | **隔离机制** | 容器级隔离 + 资源限制 + 网络隔离 |
 | **冷启动优化** | 预热容器池 + 轻量级镜像 |
+
+> **本期 MVP**: Backend 单进程部署，SQLite 替代 PostgreSQL，内存队列替代 Redis，本地文件系统替代 MinIO。
