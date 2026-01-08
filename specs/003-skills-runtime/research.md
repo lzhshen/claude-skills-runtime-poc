@@ -323,39 +323,42 @@ bash scripts/process.sh "$DATA_FILE"
 
 ### 3.4 本项目中的脚本执行设计
 
-考虑到我们的混合架构（Python 后端 + TypeScript opencode-bridge），脚本执行涉及：
+> **架构更新** (2026-01-09): 采用纯 Python 架构，通过内置 opencode Python Client 直连 opencode Server。
 
 ```
-┌──────────────┐    HTTP     ┌─────────────────┐    SDK     ┌───────────────┐
-│   Frontend   │ ─────────▶  │  Python Backend │ ─────────▶ │ opencode-bridge│
-└──────────────┘             │   (FastAPI)     │            │  (TypeScript)  │
-                             └────────┬────────┘            └───────┬────────┘
-                                      │                             │
-                                      │                             │ @opencode-ai/sdk
-                                      │                             ▼
-                                      │                      ┌───────────────┐
-                                      │                      │ opencode Server│
-                                      │                      └───────┬────────┘
-                                      │                              │
-                                      │                              │ 工具调用
-                                      │                              ▼
-                                      │                      ┌───────────────┐
-                                      │                      │  系统 Shell   │
-                                      │                      │ 脚本执行环境   │
-                                      │                      └───────────────┘
-                                      │                              │
-                                      │                              │
-技能包临时存储 ◀───────────────────────┘                              │
-/tmp/claude-skills-runtime/{id}/                                     │
-  └── scripts/                                                       │
-      ├── validate.py  ◀─────────────────────────────────────────────┘
+┌──────────────┐    HTTP     ┌─────────────────────────────────────┐
+│   Frontend   │ ─────────▶  │         Python Backend              │
+└──────────────┘             │          (FastAPI)                  │
+                             │  ┌─────────────────────────────────┐│
+                             │  │   opencode Python Client        ││
+                             │  │   (backend/src/opencode/)       ││
+                             │  └───────────────┬─────────────────┘│
+                             └──────────────────┼──────────────────┘
+                                                │
+                                                │ HTTP API
+                                                ▼
+                                         ┌───────────────┐
+                                         │ opencode Server│
+                                         └───────┬────────┘
+                                                 │
+                                                 │ 工具调用
+                                                 ▼
+                                         ┌───────────────┐
+                                         │  系统 Shell   │
+                                         │ 脚本执行环境   │
+                                         └───────────────┘
+                                                 │
+                                                 ▼
+技能包临时存储: /tmp/claude-skills-runtime/{id}/
+  └── scripts/
+      ├── validate.py  ◀─────────────────────────┘
       └── process.sh
 ```
 
 **设计决策**:
 - 技能包解压到临时目录后，scripts/ 中的脚本对 opencode 运行时可见
 - Claude 通过 Bash 工具执行脚本，路径为解压后的绝对路径
-- 脚本执行结果通过 opencode-bridge SSE 流式返回前端
+- 脚本执行结果通过后端 SSE 流式返回前端
 
 ### 3.5 验证规则
 
@@ -558,15 +561,17 @@ Frontend -> Python Backend -> opencode-bridge -> opencode server
 | pytest | 8.0+ | 测试框架 |
 | pytest-asyncio | 0.23+ | 异步测试支持 |
 
-### opencode-bridge
+### ~~opencode-bridge~~ (已废弃)
+
+> **注意**: 此部分保留仅用于历史参考。架构已简化为纯 Python，不再需要 TypeScript 微服务。
 
 | 依赖 | 版本 | 用途 |
 |------|------|------|
-| Node.js | 20.x LTS | 运行时 |
-| TypeScript | 5.x | 语言 |
-| @opencode-ai/sdk | latest | opencode 集成 |
-| Fastify | 4.x | Web 框架 |
-| Vitest | 1.x | 测试框架 |
+| ~~Node.js~~ | ~~20.x LTS~~ | ~~运行时~~ |
+| ~~TypeScript~~ | ~~5.x~~ | ~~语言~~ |
+| ~~@opencode-ai/sdk~~ | ~~latest~~ | ~~opencode 集成~~ |
+| ~~Fastify~~ | ~~4.x~~ | ~~Web 框架~~ |
+| ~~Vitest~~ | ~~1.x~~ | ~~测试框架~~ |
 
 ### Frontend
 
