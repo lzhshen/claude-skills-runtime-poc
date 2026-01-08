@@ -1,5 +1,7 @@
 """FastAPI main application."""
 
+import logging
+import time
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -11,6 +13,13 @@ from .api import router as api_router
 from .opencode import OpencodeClient
 from .utils.config import get_settings
 from .utils.errors import AppError
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -46,6 +55,29 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Request logging middleware
+    @app.middleware("http")
+    async def log_requests(request: Request, call_next):
+        start_time = time.time()
+
+        # Log request
+        logger.info(
+            f"Request: {request.method} {request.url.path} "
+            f"client={request.client.host if request.client else 'unknown'}"
+        )
+
+        # Process request
+        response = await call_next(request)
+
+        # Log response
+        duration_ms = (time.time() - start_time) * 1000
+        logger.info(
+            f"Response: {request.method} {request.url.path} "
+            f"status={response.status_code} duration={duration_ms:.2f}ms"
+        )
+
+        return response
 
     # Add error handler for AppError
     @app.exception_handler(AppError)

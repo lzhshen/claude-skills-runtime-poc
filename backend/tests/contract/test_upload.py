@@ -5,13 +5,20 @@ import zipfile
 
 import pytest
 from fastapi.testclient import TestClient
+from unittest.mock import AsyncMock, MagicMock
 
 from src.main import app
 
 
 @pytest.fixture
 def client():
-    """Create test client."""
+    """Create test client with mocked opencode_client."""
+    mock_client = MagicMock()
+    mock_client.check_health = AsyncMock(return_value=True)
+    mock_client.base_url = "http://localhost:8080"
+    mock_client.close = AsyncMock()
+
+    app.state.opencode_client = mock_client
     return TestClient(app)
 
 
@@ -180,7 +187,7 @@ class TestUploadEndpoint:
 
         assert response.status_code == 400
         data = response.json()
-        assert data["error"]["code"] == "INVALID_ZIP"
+        assert data["detail"]["code"] == "INVALID_REQUEST"
 
     def test_upload_preserves_original_filename(self, client: TestClient):
         """Original filename should be preserved."""

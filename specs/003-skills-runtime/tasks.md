@@ -259,13 +259,13 @@
 **目的**: 影响多个用户故事的改进
 
 - [ ] T123 [P] 在 `backend/src/api/` 中为所有 API 端点添加全面的错误处理
-- [ ] T124 [P] 在 `backend/src/main.py` 中添加请求日志中间件
-- [ ] T125 [P] 在 `frontend/src/components/ErrorBoundary.tsx` 中添加前端错误边界
+- [X] T124 [P] 在 `backend/src/main.py` 中添加请求日志中间件
+- [X] T125 [P] 在 `frontend/src/components/ErrorBoundary.tsx` 中添加前端错误边界
 - [ ] T126 [P] 在前端组件中添加加载状态和骨架屏
 - [ ] T127 [P] 在 `frontend/src/index.css` 中添加响应式设计调整
-- [ ] T128 [P] 在 `backend/Dockerfile` 中创建后端 Docker 配置
-- [ ] T129 [P] 在 `frontend/Dockerfile` 中创建前端 Docker 配置
-- [ ] T130 创建用于开发环境的 docker-compose.yml
+- [X] T128 [P] 在 `backend/Dockerfile` 中创建后端 Docker 配置
+- [X] T129 [P] 在 `frontend/Dockerfile` 中创建前端 Docker 配置
+- [X] T130 创建用于开发环境的 docker-compose.yml
 - [ ] T131 运行 quickstart.md 验证 - 确认所有步骤都能正常工作
 - [ ] T132 [P] 在 `backend/tests/integration/` 中添加完整用户工作流的集成测试
 - [ ] T133 代码清理和最终重构
