@@ -1,6 +1,7 @@
 # Quickstart: Claude Skills 运行时框架与测试 Web 应用
 
 **Date**: 2026-01-08 | **Branch**: `003-skills-runtime`
+**Updated**: 2026-01-09 - 架构简化：移除 opencode-bridge，改用纯 Python 架构
 
 ## 概述
 
@@ -14,8 +15,8 @@
 
 | 软件 | 版本 | 用途 |
 |------|------|------|
-| Python | 3.11+ | 主后端运行时 |
-| Node.js | 20.x LTS | opencode-bridge 和前端运行时 |
+| Python | 3.11+ | 后端运行时 |
+| Node.js | 20.x LTS | 前端运行时 |
 | pnpm | 8.x+ | Node.js 包管理器（推荐） |
 | opencode | latest | AI 编码助手服务器 |
 
@@ -39,7 +40,8 @@ opencode --version
 ```
 claude-skills-runtime-poc/
 ├── backend/                 # Python FastAPI 后端
-├── opencode-bridge/         # TypeScript opencode 集成服务
+│   └── src/
+│       └── opencode/        # 轻量级 opencode Python Client
 ├── frontend/                # React 前端
 ├── specs/                   # 规格文档
 │   └── 003-skills-runtime/
@@ -88,8 +90,8 @@ HOST=0.0.0.0
 PORT=8000
 DEBUG=true
 
-# opencode-bridge 配置
-OPENCODE_BRIDGE_URL=http://localhost:3001
+# opencode Server 配置
+OPENCODE_SERVER_URL=http://localhost:3000
 
 # 临时文件目录
 TEMP_DIR=/tmp/claude-skills-runtime
@@ -99,30 +101,7 @@ MAX_UPLOAD_SIZE_MB=10
 EXECUTION_TIMEOUT_SECONDS=300
 ```
 
-### 3. 设置 opencode-bridge
-
-```bash
-cd opencode-bridge
-
-# 安装依赖
-pnpm install
-
-# 创建 .env 文件
-cp .env.example .env
-```
-
-**opencode-bridge/.env 示例**:
-```env
-# 服务配置
-PORT=3001
-HOST=0.0.0.0
-
-# opencode 服务器配置
-OPENCODE_SERVER_URL=http://localhost:3000
-OPENCODE_AUTO_START=true
-```
-
-### 4. 设置前端
+### 3. 设置前端
 
 ```bash
 cd frontend
@@ -151,14 +130,7 @@ VITE_API_BASE_URL=http://localhost:8000/api/v1
 opencode serve --port 3000 --cors http://localhost:5173
 ```
 
-**终端 2 - 启动 opencode-bridge**:
-```bash
-cd opencode-bridge
-pnpm dev
-# 服务运行在 http://localhost:3001
-```
-
-**终端 3 - 启动 Python 后端**:
+**终端 2 - 启动 Python 后端**:
 ```bash
 cd backend
 source .venv/bin/activate
@@ -167,7 +139,7 @@ python -m uvicorn src.main:app --reload --port 8000
 # API 文档：http://localhost:8000/docs
 ```
 
-**终端 4 - 启动前端**:
+**终端 3 - 启动前端**:
 ```bash
 cd frontend
 pnpm dev
@@ -197,8 +169,8 @@ docker-compose down
 # Python 后端
 curl http://localhost:8000/api/v1/health
 
-# opencode-bridge
-curl http://localhost:3001/api/v1/health
+# opencode Server
+curl http://localhost:3000/global/health
 ```
 
 ### 2. 访问应用
@@ -261,27 +233,6 @@ isort src tests
 ruff src tests
 ```
 
-### opencode-bridge
-
-```bash
-cd opencode-bridge
-
-# 运行测试
-pnpm test
-
-# 运行测试（监视模式）
-pnpm test:watch
-
-# 类型检查
-pnpm typecheck
-
-# 代码格式化
-pnpm format
-
-# 代码检查
-pnpm lint
-```
-
 ### 前端
 
 ```bash
@@ -325,9 +276,9 @@ lsof -i :3000
 opencode serve --port 3002
 ```
 
-### Q: Python 后端无法连接 opencode-bridge
+### Q: Python 后端无法连接 opencode Server
 
-**A**: 检查 `OPENCODE_BRIDGE_URL` 环境变量是否正确设置，并确保 opencode-bridge 服务正在运行。
+**A**: 检查 `OPENCODE_SERVER_URL` 环境变量是否正确设置，并确保 opencode Server 正在运行。
 
 ### Q: 上传文件失败
 

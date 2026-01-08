@@ -5,19 +5,19 @@
 
 ## Summary
 
-构建一个 Claude Skills 运行时框架和测试 Web 应用，支持技能包上传、验证、预览、编辑、运行和日志查看。采用混合架构：Python (FastAPI) 作为主后端处理业务逻辑，TypeScript 微服务专用于 opencode 集成，React + TailwindCSS 构建前端。
+构建一个 Claude Skills 运行时框架和测试 Web 应用，支持技能包上传、验证、预览、编辑、运行和日志查看。采用纯 Python 架构：Python (FastAPI) 后端通过轻量级 opencode Python Client 直接与 opencode Server 通信，React + TailwindCSS 构建前端。
+
+> **架构变更记录** (2026-01-09): 经过深入研究 opencode Server HTTP API，确认其提供完整的 REST API，决定从"混合架构"改为"纯 Python 架构"。详见 [research.md](./research.md)。
 
 ## Technical Context
 
 **Language/Version**:
 - 前端: TypeScript 5.x + React 18.x
-- 主后端: Python 3.11+ (FastAPI)
-- opencode 集成服务: TypeScript 5.x + Node.js 20.x
+- 后端: Python 3.11+ (FastAPI)
 
 **Primary Dependencies**:
 - 前端: React 18, TailwindCSS 3.x, Monaco Editor (代码编辑), react-arborist (目录树)
-- 主后端: FastAPI, Pydantic, python-multipart (文件上传), PyYAML, aiohttp
-- opencode 服务: @opencode-ai/sdk, Express.js 或 Fastify
+- 后端: FastAPI, Pydantic, python-multipart (文件上传), PyYAML, aiohttp, httpx (opencode HTTP 客户端)
 
 **Storage**:
 - 文件系统 (技能包临时存储)
@@ -26,11 +26,10 @@
 **Testing**:
 - 前端: Vitest + React Testing Library
 - Python: pytest + pytest-asyncio
-- TypeScript: Vitest
 
 **Target Platform**: Linux server (Docker), 现代浏览器 (Chrome, Firefox, Safari, Edge 最新2版本)
 
-**Project Type**: Web application (frontend + backend + microservice)
+**Project Type**: Web application (frontend + backend)
 
 **Performance Goals**:
 - 技能包上传验证: < 30秒 (5MB以下)
@@ -46,6 +45,22 @@
 - 单用户本地使用
 - 每次会话约 10-50 次技能执行
 
+## Deployment Architecture
+
+本项目采用 **控制平面 + 数据平面** 分离架构：
+
+| 服务类型 | 服务 | 生命周期 |
+|---------|------|--------|
+| **常驻服务** | Frontend, API Gateway, Task Worker, PostgreSQL, Redis, MinIO | 持续运行 |
+| **临时服务** | Skill Runner (opencode + 脚本执行环境) | 按任务创建/销毁 |
+
+**关键设计决策**:
+- opencode Server 与 Skill 脚本在 **同一个 Runner 容器** 内执行
+- 每次技能执行创建独立容器，完成后销毁，确保隔离
+- 使用预热容器池优化冷启动延迟
+
+详细部署架构设计参见 [architecture.md](./architecture.md)。
+
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
@@ -54,11 +69,11 @@
 
 | 检查项 | 状态 | 说明 |
 |--------|------|------|
-| 不引入不必要的复杂度 | ⚠️ | 混合架构增加复杂度，但有正当理由 |
+| 不引入不必要的复杂度 | ✅ | 纯 Python 架构，2 个项目 |
 | YAGNI | ✅ | 只实现规格说明中的功能 |
 | 直接的解决方案 | ✅ | 使用成熟框架，避免过度抽象 |
 | 最小依赖 | ✅ | 每个依赖都有明确用途 |
-| 可删除的代码 | ✅ | 三个项目低耦合，可独立删除 |
+| 可删除的代码 | ✅ | 两个项目低耦合，可独立删除 |
 
 ### II. 测试驱动开发 (TDD)
 
@@ -70,7 +85,7 @@
 | 无未测试代码 | ✅ | 所有功能需测试覆盖 |
 | 测试独立性 | ✅ | 使用隔离测试 |
 
-**Gate 结果**: ⚠️ 通过（需记录复杂度违规）
+**Gate 结果**: ✅ 通过
 
 ## Project Structure
 
@@ -94,6 +109,13 @@ backend/
 │   ├── models/          # Pydantic 数据模型
 │   ├── services/        # 业务逻辑 (技能包管理、验证)
 │   ├── api/             # FastAPI 路由
+│   ├── opencode/        # 轻量级 opencode Python Client
+│   │   ├── __init__.py  # 导出 OpencodeClient
+│   │   ├── client.py    # 客户端主类
+│   │   ├── session.py   # 会话 API
+│   │   ├── config.py    # 配置 API
+│   │   ├── events.py    # SSE 事件流
+│   │   └── models.py    # Pydantic 模型
 │   └── utils/           # 工具函数
 ├── tests/
 │   ├── unit/
@@ -101,15 +123,6 @@ backend/
 │   └── contract/
 ├── requirements.txt
 └── pyproject.toml
-
-opencode-bridge/
-├── src/
-│   ├── client/          # opencode SDK 封装
-│   ├── api/             # HTTP API 路由
-│   └── types/           # TypeScript 类型定义
-├── tests/
-├── package.json
-└── tsconfig.json
 
 frontend/
 ├── src/
@@ -129,19 +142,13 @@ frontend/
 └── vite.config.ts
 ```
 
-**Structure Decision**: 选择 Web application 结构的扩展版本，包含三个项目：
-1. `backend/` - Python FastAPI 主后端，处理技能包管理、验证、文件操作
-2. `opencode-bridge/` - TypeScript 微服务，专用于 opencode SDK 集成
-3. `frontend/` - React + TailwindCSS 前端
+**Structure Decision**: 选择 Web application 标准结构，包含两个项目：
+1. `backend/` - Python FastAPI 后端，处理技能包管理、验证、文件操作，通过内置 opencode Client 直连 opencode Server
+2. `frontend/` - React + TailwindCSS 前端
 
 ## Complexity Tracking
 
-> **Fill ONLY if Constitution Check has violations that must be justified**
-
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|--------------------------------------|
-| 混合架构 (Python + TypeScript) | opencode 只提供 TS SDK，用户熟悉 Python | 纯 Python: 需自行封装 HTTP API，类型不安全，维护成本高；纯 TS: 用户学习成本高 |
-| 3个项目而非2个 | opencode 集成需要独立服务 | 嵌入后端: Python 无法直接使用 TS SDK；嵌入前端: 安全风险，无法复用 |
+> **无违规记录**: 纯 Python 架构符合宪法所有原则。
 
 ---
 
@@ -153,11 +160,11 @@ frontend/
 
 | 检查项 | 状态 | 设计阶段评估 |
 |--------|------|-------------|
-| 不引入不必要的复杂度 | ⚠️ | 混合架构已在 Complexity Tracking 中记录理由 |
+| 不引入不必要的复杂度 | ✅ | 纯 Python 架构，无需 TypeScript 微服务 |
 | YAGNI | ✅ | 数据模型和 API 仅包含规格说明要求的功能 |
 | 直接的解决方案 | ✅ | 使用标准 REST API，SSE 流式传输，无过度抽象 |
 | 最小依赖 | ✅ | 每个依赖都有明确用途（详见 research.md） |
-| 可删除的代码 | ✅ | 三个项目通过 HTTP API 松耦合 |
+| 可删除的代码 | ✅ | 两个项目通过 HTTP API 松耦合 |
 
 ### II. 测试驱动开发 (TDD)
 
@@ -182,5 +189,5 @@ frontend/
 | `data-model.md` | 数据模型定义 | ✅ 完成 |
 | `quickstart.md` | 快速启动指南 | ✅ 完成 |
 | `contracts/backend-api.md` | Python 后端 API 契约 | ✅ 完成 |
-| `contracts/opencode-bridge-api.md` | opencode-bridge API 契约 | ✅ 完成 |
+| `architecture.md` | 部署架构设计 | ✅ 完成 |
 | `tasks.md` | 任务列表 | ⏳ 待生成 (`/speckit.tasks`) |

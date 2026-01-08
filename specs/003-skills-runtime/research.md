@@ -10,21 +10,70 @@
 
 ## 1. 后端技术栈选择
 
-### Decision: 混合架构 (Python + TypeScript)
+### Decision: 纯 Python 架构 + 轻量级 opencode Python Client
+
+> **架构变更记录** (2026-01-09): 经过深入研究 opencode Server HTTP API，决定从"混合架构"改为"纯 Python 架构"。详见下方决策演进。
 
 ### Rationale
 
-1. **opencode SDK 限制**: opencode 仅提供 TypeScript/JavaScript SDK (`@opencode-ai/sdk`)，无官方 Python SDK
+1. **opencode Server 提供完整 HTTP API**: 经研究确认，opencode Server 暴露了完整的 REST API 和 OpenAPI 3.1 规范文档
 2. **用户技术背景**: 用户熟悉 Python 技术栈
-3. **最佳平衡**: Python 处理主要业务逻辑，TypeScript 微服务处理 opencode 集成
+3. **简化架构**: 无需 TypeScript 微服务，降低部署和维护复杂度
+4. **符合宪法原则**: 减少不必要复杂度，遵循 YAGNI
 
-### Alternatives Considered
+### Decision Evolution (决策演进)
 
-| 方案 | 优点 | 缺点 | 拒绝原因 |
-|------|------|------|----------|
-| 纯 TypeScript | 与 opencode 生态一致，类型安全 | 用户学习成本高 | 用户明确表示熟悉 Python |
-| 纯 Python + HTTP API | 用户熟悉，无需学习新语言 | 需自行封装 opencode HTTP API，类型不安全，维护成本高 | opencode HTTP API 文档不完整，SDK 提供更好的抽象 |
-| 混合架构 | 兼顾用户技术背景和 SDK 集成 | 增加项目复杂度，需要服务间通信 | **选择此方案** |
+#### 初始决策 (2026-01-08): 混合架构
+
+| 方案 | 优点 | 缺点 | 结论 |
+|------|------|------|------|
+| 纯 TypeScript | 与 opencode 生态一致 | 用户学习成本高 | 拒绝 |
+| 纯 Python + HTTP API | 用户熟悉 | 当时认为 HTTP API 不完整 | 拒绝 |
+| 混合架构 (Python + TS Bridge) | 兼顾两者 | 复杂度高 | **初选** |
+
+#### 重新评估 (2026-01-09): 深入研究 opencode HTTP API
+
+经过详细研究 [opencode.ai/docs/server](https://opencode.ai/docs/server/)，发现：
+
+1. **HTTP API 完整**: 所有 SDK 功能都有对应 HTTP 端点
+2. **OpenAPI 文档**: 服务器暴露 `/doc` 端点提供完整规范
+3. **SSE 事件流**: `/event` 和 `/global/event` 端点支持实时事件订阅
+4. **消息格式明确**: `{noReply, parts, model}` 格式已确认
+
+#### 最终决策: 纯 Python + 轻量级 opencode Client
+
+| 方案 | 优点 | 缺点 | 结论 |
+|------|------|------|------|
+| 混合架构 (原方案) | SDK 类型安全 | 4 个服务，双运行时，违反宪法 | **放弃** |
+| 纯 Python + 裸 HTTP | 最简单 | 代码分散，不易维护 | 拒绝 |
+| **纯 Python + 轻量 Client** | 类型安全 + 简洁 + 可扩展 | 需自行封装部分 API | **最终选择** |
+
+### 轻量级 opencode Python Client 设计
+
+**设计原则**:
+- 只封装本项目需要的 API（约 7 个方法）
+- 使用 Pydantic 提供类型安全
+- API 风格与 TypeScript SDK 保持一致
+- 模块化设计，未来可独立发布
+
+**封装的 API 子集**:
+
+| 方法 | HTTP 端点 | 用途 |
+|------|-----------|------|
+| `client.health()` | `GET /global/health` | 健康检查 |
+| `client.session.create()` | `POST /session` | 创建会话 |
+| `client.session.delete()` | `DELETE /session/:id` | 删除会话 |
+| `client.session.prompt()` | `POST /session/:id/prompt_async` | 发送消息 |
+| `client.session.abort()` | `POST /session/:id/abort` | 中止会话 |
+| `client.config.providers()` | `GET /config/providers` | 获取模型列表 |
+| `client.event.subscribe()` | `GET /event` (SSE) | 订阅事件流 |
+
+**不封装的 SDK 功能** (本项目不需要):
+- `client.project.*` - 项目管理
+- `client.file.*` - 文件操作
+- `client.find.*` - 搜索功能
+- `client.tui.*` - TUI 控制
+- `client.lsp.*` / `client.mcp.*` - 高级功能
 
 ---
 
@@ -107,7 +156,25 @@ client.event.subscribe()         // 订阅事件（用于流式传输）
 
 ## 3. Claude Skills 规范研究
 
-### 3.1 技能包结构
+### 3.1 技能包完整结构
+
+**Claude Skills 定义**: Claude Skills 是模块化的包，包含指令、脚本和资源，Claude 可以动态发现和加载这些内容。Skills 本质上是一种基于提示的元工具架构，通过专门的指令注入来扩展 LLM 能力，通过提示扩展和上下文修改来运行，而非传统的函数调用或直接代码执行。
+
+**技能包目录结构**:
+```
+skill-package/
+├── SKILL.md              # 必需：核心指令文件
+├── scripts/              # 可选：可执行脚本目录
+│   ├── validate.py       # Python 脚本示例
+│   ├── process.sh        # Bash 脚本示例
+│   └── analyze.js        # JavaScript 脚本示例
+├── templates/            # 可选：模板文件目录
+│   └── output-template.md
+├── data/                 # 可选：静态数据文件
+│   └── config.yaml
+└── examples/             # 可选：示例文件
+    └── example-input.txt
+```
 
 **必需文件**: `SKILL.md`
 
@@ -115,24 +182,216 @@ client.event.subscribe()         // 订阅事件（用于流式传输）
 ```markdown
 ---
 name: 技能名称
-description: 技能描述
+description: 技能描述（应包含"什么"和"何时"使用）
 ---
 
 # 技能标题
 
 技能指令内容...
+
+## 可用脚本
+
+如果 scripts/ 目录存在脚本，可在此说明如何调用：
+- `scripts/validate.py`: 用于验证输入格式
+- `scripts/process.sh`: 用于处理数据
+
+## 使用示例
+
+...
 ```
 
-**YAML 前置元数据必填字段**:
-- `name`: 技能名称
-- `description`: 技能描述
+**YAML 前置元数据**:
+| 字段 | 必填 | 描述 |
+|------|------|------|
+| `name` | ✅ | 技能名称，用于发现和调用 |
+| `description` | ✅ | 技能描述，必须同时说明技能做什么和何时使用它 |
+| `version` | ❌ | 技能版本号 |
+| `author` | ❌ | 作者信息 |
+| `tags` | ❌ | 标签列表，便于分类 |
 
-### 3.2 验证规则
+**最佳实践**:
+- SKILL.md 应保持在 500 行以内
+- 较大的内容应拆分为独立的参考文件，并在 SKILL.md 中清晰链接
+- 描述应包含触发词，便于 Claude 识别何时使用该技能
 
-1. Zip 文件有效性检查
-2. SKILL.md 存在性检查（根目录或单个顶级目录）
-3. YAML 前置元数据解析和验证
-4. 必填字段存在性检查
+### 3.2 Scripts（可执行脚本）详解
+
+**脚本类型和用途**:
+
+| 脚本类型 | 文件扩展名 | 典型用途 |
+|----------|------------|----------|
+| Python | `.py` | 数据处理、API 调用、复杂逻辑 |
+| Bash/Shell | `.sh` | 文件操作、系统命令、环境配置 |
+| JavaScript/Node.js | `.js`, `.mjs` | 数据转换、JSON 处理、Web 操作 |
+| 其他可执行文件 | 任意 | 特定工具、编译后的二进制 |
+
+**脚本的优势**:
+1. **确定性可靠**: 脚本执行结果一致，不受 LLM 生成变化影响
+2. **Token 效率**: 脚本本身不占用上下文窗口，只有输出消耗 tokens
+3. **可复用性**: 相同逻辑无需每次让 Claude 重新生成
+4. **安全性**: 经过审计的脚本比动态生成的代码更可控
+
+**脚本调用方式**:
+```markdown
+<!-- 在 SKILL.md 中指导 Claude 如何使用脚本 -->
+当需要验证用户输入时，请执行以下命令：
+bash scripts/validate.py --input "$USER_INPUT"
+
+当需要处理数据时：
+bash scripts/process.sh "$DATA_FILE"
+```
+
+### 3.3 脚本执行环境（与 opencode server 的关系）
+
+**执行环境架构**:
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      Claude Code / opencode                     │
+│  ┌───────────────────────────────────────────────────────────┐  │
+│  │                    Agent Runtime                           │  │
+│  │  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐│  │
+│  │  │   Claude    │  │    Tool     │  │   MCP Servers       ││  │
+│  │  │   (LLM)     │◀─│   Router    │◀─│   (optional)        ││  │
+│  │  └─────────────┘  └──────┬──────┘  └─────────────────────┘│  │
+│  │                          │                                 │  │
+│  │         ┌────────────────┼────────────────┐                │  │
+│  │         ▼                ▼                ▼                │  │
+│  │  ┌───────────┐    ┌───────────┐    ┌───────────────────┐  │  │
+│  │  │   Bash    │    │   Read    │    │  File/Edit/Write  │  │  │
+│  │  │   Tool    │    │   Tool    │    │      Tools        │  │  │
+│  │  └─────┬─────┘    └───────────┘    └───────────────────┘  │  │
+│  │        │                                                   │  │
+│  └────────┼───────────────────────────────────────────────────┘  │
+│           │                                                      │
+│           ▼                                                      │
+│  ┌─────────────────────────────────────────────────────────────┐│
+│  │              宿主系统 Shell / 运行时环境                      ││
+│  │  ┌─────────────────────────────────────────────────────────┐││
+│  │  │  Shell (bash/zsh)                                       │││
+│  │  │  ┌──────────────────────────────────────────────────┐  │││
+│  │  │  │  技能包脚本执行                                    │  │││
+│  │  │  │  - Python: 系统 Python 解释器                     │  │││
+│  │  │  │  - Bash: 系统 Shell                               │  │││
+│  │  │  │  - Node.js: 系统 Node 运行时                      │  │││
+│  │  │  └──────────────────────────────────────────────────┘  │││
+│  │  └─────────────────────────────────────────────────────────┘││
+│  └─────────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**关键理解点**:
+
+1. **opencode Server 作用**:
+   - opencode 是 Agent 运行时基础设施，提供 Client/Server 架构
+   - Server 运行在 Bun/JavaScript 运行时上，暴露 HTTP API
+   - Client（TUI 或 SDK）通过 HTTP 与 Server 通信
+   - Server 管理与 LLM (Claude) 的会话和工具调用
+
+2. **脚本执行流程**:
+   ```
+   用户提示 → Claude 分析 → 决定使用脚本 → 通过 Bash Tool 执行
+                                               ↓
+                                        opencode 调用系统 shell
+                                               ↓
+                                        脚本在宿主系统上执行
+                                               ↓
+                                        输出返回给 Claude
+   ```
+
+3. **脚本执行环境特点**:
+   - 脚本运行在 **宿主操作系统** 上，而非沙箱
+   - 使用系统已安装的解释器（Python、Node.js 等）
+   - 有完整的文件系统访问权限
+   - 可以进行网络请求（需注意安全）
+   - 输出被捕获并返回给 Claude 上下文
+
+4. **opencode SDK 与脚本执行的关系**:
+   ```typescript
+   // opencode SDK 示例 - 工具执行
+   import { createOpencode } from "@opencode-ai/sdk"
+
+   const { client } = await createOpencode()
+
+   // SDK 管理会话，LLM 决定何时调用工具
+   // 当 LLM 决定调用 Bash 工具执行脚本时：
+   // 1. SDK 接收工具调用请求
+   // 2. 调用系统 shell 执行命令
+   // 3. 捕获 stdout/stderr
+   // 4. 返回结果给 LLM
+   ```
+
+### 3.4 本项目中的脚本执行设计
+
+考虑到我们的混合架构（Python 后端 + TypeScript opencode-bridge），脚本执行涉及：
+
+```
+┌──────────────┐    HTTP     ┌─────────────────┐    SDK     ┌───────────────┐
+│   Frontend   │ ─────────▶  │  Python Backend │ ─────────▶ │ opencode-bridge│
+└──────────────┘             │   (FastAPI)     │            │  (TypeScript)  │
+                             └────────┬────────┘            └───────┬────────┘
+                                      │                             │
+                                      │                             │ @opencode-ai/sdk
+                                      │                             ▼
+                                      │                      ┌───────────────┐
+                                      │                      │ opencode Server│
+                                      │                      └───────┬────────┘
+                                      │                              │
+                                      │                              │ 工具调用
+                                      │                              ▼
+                                      │                      ┌───────────────┐
+                                      │                      │  系统 Shell   │
+                                      │                      │ 脚本执行环境   │
+                                      │                      └───────────────┘
+                                      │                              │
+                                      │                              │
+技能包临时存储 ◀───────────────────────┘                              │
+/tmp/claude-skills-runtime/{id}/                                     │
+  └── scripts/                                                       │
+      ├── validate.py  ◀─────────────────────────────────────────────┘
+      └── process.sh
+```
+
+**设计决策**:
+- 技能包解压到临时目录后，scripts/ 中的脚本对 opencode 运行时可见
+- Claude 通过 Bash 工具执行脚本，路径为解压后的绝对路径
+- 脚本执行结果通过 opencode-bridge SSE 流式返回前端
+
+### 3.5 验证规则
+
+1. **Zip 文件验证**:
+   - 有效的 zip 格式
+   - 大小不超过 10MB
+   - 防止 zip bomb（检查解压后大小）
+
+2. **SKILL.md 验证**:
+   - 存在于根目录或单个顶级目录
+   - 包含有效的 YAML 前置元数据
+   - name 和 description 字段必填
+
+3. **脚本验证（可选增强）**:
+   - 脚本文件具有可执行权限（或可自动添加）
+   - 脚本语法基本检查
+   - 危险操作检测（网络请求、敏感文件访问等）
+
+### 3.6 安全考虑
+
+**脚本执行安全**:
+- ⚠️ 脚本在宿主系统执行，需审计外部技能包
+- 检查意外的网络调用
+- 检查文件访问模式
+- 从外部 URL 获取数据的技能需特别注意
+
+**验证清单**:
+| 检查项 | 说明 |
+|--------|------|
+| YAML frontmatter 有效 | 必须可解析 |
+| 描述包含"什么"和"何时" | 便于技能发现 |
+| 所有脚本已测试 | 确保可执行 |
+| 引用正确链接 | SKILL.md 中的文件引用存在 |
+| 无重复信息 | 避免上下文浪费 |
+| SKILL.md 少于 500 行 | 控制上下文大小 |
+| 无多余文档 | 只包含必要文件 |
 
 ---
 

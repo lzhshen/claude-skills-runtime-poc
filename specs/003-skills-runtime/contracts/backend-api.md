@@ -1,12 +1,38 @@
 # API Contracts: Python Backend
 
 **Date**: 2026-01-08 | **Branch**: `003-skills-runtime`
+**Updated**: 2026-01-09 - 架构变更：移除 opencode-bridge，改用内置 opencode Python Client 直连 opencode Server
 
 ## 概述
 
 本文档定义了 Python 后端 (FastAPI) 的 REST API 契约。
 
 **Base URL**: `http://localhost:8000/api/v1`
+
+---
+
+## 内部架构
+
+Python 后端通过内置的轻量级 opencode Python Client 直接与 opencode Server 通信：
+
+```
+Frontend → Python Backend (FastAPI) → opencode Server
+                  ↓
+         opencode Python Client
+         (backend/src/opencode/)
+```
+
+**opencode Python Client 封装的 API**:
+
+| 方法 | HTTP 端点 | 用途 |
+|------|-----------|------|
+| `client.health()` | `GET /global/health` | 健康检查 |
+| `client.session.create()` | `POST /session` | 创建会话 |
+| `client.session.delete()` | `DELETE /session/:id` | 删除会话 |
+| `client.session.prompt()` | `POST /session/:id/prompt_async` | 发送消息 |
+| `client.session.abort()` | `POST /session/:id/abort` | 中止会话 |
+| `client.config.providers()` | `GET /config/providers` | 获取模型列表 |
+| `client.event.subscribe()` | `GET /event` (SSE) | 订阅事件流 |
 
 ---
 
@@ -302,15 +328,31 @@
 
 执行技能。
 
+> **内部流程**:
+> 1. 使用 `client.session.create()` 创建 opencode 会话
+> 2. 使用 `client.session.prompt(no_reply=True)` 注入技能指令
+> 3. 使用 `client.session.prompt()` 发送用户提示
+> 4. 使用 `client.event.subscribe_session()` 订阅会话事件流
+
 **Path Parameters**:
 - `skill_id`: string (UUID) - 技能包 ID
 
 **Request Body**:
 ```json
 {
-  "prompt": "请帮我分析这段代码..."
+  "prompt": "请帮我分析这段代码...",
+  "model": {
+    "provider_id": "anthropic",
+    "model_id": "claude-sonnet-4-20250514"
+  }
 }
 ```
+
+**字段说明**:
+- `prompt`: string (required) - 用户测试提示
+- `model`: object (optional) - 模型配置，不指定则使用默认模型
+  - `provider_id`: string - 提供商 ID (如 "anthropic", "openai")
+  - `model_id`: string - 模型 ID
 
 **Response 202** (执行已启动):
 ```json
@@ -319,9 +361,14 @@
   "skill_package_id": "550e8400-e29b-41d4-a716-446655440000",
   "skill_name": "My Skill",
   "user_prompt": "请帮我分析这段代码...",
+  "model": {
+    "provider_id": "anthropic",
+    "model_id": "claude-sonnet-4-20250514"
+  },
   "status": "pending",
   "started_at": "2026-01-08T10:00:00Z",
-  "stream_url": "/api/v1/executions/660e8400-e29b-41d4-a716-446655440000/stream"
+  "stream_url": "/api/v1/executions/660e8400-e29b-41d4-a716-446655440000/stream",
+  "opencode_session_id": "oc_session_123456"
 }
 ```
 
@@ -335,11 +382,23 @@
 }
 ```
 
+**Response 503** (opencode Server 不可用):
+```json
+{
+  "error": {
+    "code": "OPENCODE_UNAVAILABLE",
+    "message": "无法连接到 opencode Server"
+  }
+}
+```
+
 ---
 
 ### GET /executions/{session_id}/stream
 
 获取执行的实时流（SSE）。
+
+> **内部流程**: 使用 `client.event.subscribe_session()` 订阅 opencode 会话事件流，转发事件给客户端
 
 **Path Parameters**:
 - `session_id`: string (UUID) - 执行会话 ID
@@ -353,17 +412,23 @@
 event: status
 data: {"status": "running", "timestamp": "2026-01-08T10:00:01Z"}
 
-event: message
-data: {"role": "assistant", "content": "正在分析代码...", "timestamp": "2026-01-08T10:00:02Z"}
+event: message_start
+data: {"message_id": "msg_001", "role": "assistant", "timestamp": "2026-01-08T10:00:02Z"}
 
-event: tool_call
-data: {"id": "tc_001", "name": "read_file", "arguments": {"path": "/src/main.py"}, "status": "pending", "timestamp": "2026-01-08T10:00:03Z"}
+event: content_delta
+data: {"delta": "正在分析代码...", "timestamp": "2026-01-08T10:00:02Z"}
 
-event: tool_result
-data: {"tool_call_id": "tc_001", "result": "def main():\n    ...", "timestamp": "2026-01-08T10:00:04Z"}
+event: tool_call_start
+data: {"id": "tc_001", "name": "read_file", "arguments": {"path": "/src/main.py"}, "timestamp": "2026-01-08T10:00:03Z"}
 
-event: message
-data: {"role": "assistant", "content": "这段代码的主要功能是...", "timestamp": "2026-01-08T10:00:05Z"}
+event: tool_call_end
+data: {"id": "tc_001", "result": "def main():\n    ...", "status": "success", "timestamp": "2026-01-08T10:00:04Z"}
+
+event: content_delta
+data: {"delta": "这段代码的主要功能是...", "timestamp": "2026-01-08T10:00:05Z"}
+
+event: message_end
+data: {"message_id": "msg_001", "timestamp": "2026-01-08T10:00:06Z"}
 
 event: complete
 data: {"status": "completed", "duration_ms": 5000, "timestamp": "2026-01-08T10:00:06Z"}
@@ -537,9 +602,9 @@ data: {"code": "TIMEOUT", "message": "执行超时（5分钟）", "timestamp": "
 {
   "status": "healthy",
   "version": "1.0.0",
-  "opencode_bridge": {
+  "opencode_server": {
     "status": "connected",
-    "url": "http://localhost:3001"
+    "url": "http://localhost:3000"
   }
 }
 ```
@@ -549,9 +614,76 @@ data: {"code": "TIMEOUT", "message": "执行超时（5分钟）", "timestamp": "
 {
   "status": "unhealthy",
   "version": "1.0.0",
-  "opencode_bridge": {
+  "opencode_server": {
     "status": "disconnected",
     "error": "Connection refused"
   }
+}
+```
+
+---
+
+### GET /config/providers
+
+获取可用的模型提供商和模型列表。
+
+> **内部流程**: 使用 `client.config.providers()` 获取模型列表
+
+**Response 200**:
+```json
+{
+  "providers": [
+    {
+      "id": "anthropic",
+      "name": "Anthropic",
+      "models": [
+        {"id": "claude-sonnet-4-20250514", "name": "Claude Sonnet 4"},
+        {"id": "claude-3-5-sonnet-20241022", "name": "Claude 3.5 Sonnet"}
+      ]
+    },
+    {
+      "id": "openai",
+      "name": "OpenAI",
+      "models": [
+        {"id": "gpt-4o", "name": "GPT-4o"}
+      ]
+    }
+  ]
+}
+```
+
+**Response 503** (opencode Server 不可用):
+```json
+{
+  "error": {
+    "code": "OPENCODE_UNAVAILABLE",
+    "message": "无法连接到 opencode Server"
+  }
+}
+```
+
+---
+
+### GET /config/agents
+
+获取可用的 opencode agents 列表。
+
+> **内部流程**: 使用 `client.app.agents()` 获取 agents 列表
+
+**Response 200**:
+```json
+{
+  "agents": [
+    {
+      "id": "default",
+      "name": "Default Agent",
+      "description": "The default coding assistant"
+    },
+    {
+      "id": "sisyphus",
+      "name": "Sisyphus",
+      "description": "Persistent coding agent from oh-my-opencode"
+    }
+  ]
 }
 ```
