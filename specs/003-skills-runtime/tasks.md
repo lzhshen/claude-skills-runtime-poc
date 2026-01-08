@@ -25,16 +25,16 @@
 
 **目的**: 项目初始化和基本结构
 
-- [ ] T001 创建后端项目结构: `backend/src/{models,services,api,opencode,utils}/`
-- [ ] T002 [P] 在 `backend/` 中初始化 Python 项目，包含 pyproject.toml 和 requirements.txt
-- [ ] T003 [P] 创建前端项目结构: `frontend/src/{components,pages,services,hooks,types}/`
-- [ ] T004 [P] 在 `frontend/` 中初始化 React + Vite + TypeScript 项目
-- [ ] T005 [P] 在 `frontend/tailwind.config.js` 中配置 TailwindCSS
-- [ ] T006 [P] 在 `backend/pyproject.toml` 中配置 Python 代码检查工具（ruff, black, isort, mypy）
-- [ ] T007 [P] 在 `frontend/` 中配置 ESLint 和 Prettier
-- [ ] T008 [P] 创建环境配置文件: `backend/.env.example`, `frontend/.env.example`
-- [ ] T009 [P] 在 `backend/pyproject.toml` 中配置 pytest
-- [ ] T010 [P] 在 `frontend/vite.config.ts` 中配置 Vitest
+- [X] T001 创建后端项目结构: `backend/src/{models,services,api,opencode,utils}/`
+- [X] T002 [P] 在 `backend/` 中初始化 Python 项目，包含 pyproject.toml 和 requirements.txt
+- [X] T003 [P] 创建前端项目结构: `frontend/src/{components,pages,services,hooks,types}/`
+- [X] T004 [P] 在 `frontend/` 中初始化 React + Vite + TypeScript 项目
+- [X] T005 [P] 在 `frontend/tailwind.config.js` 中配置 TailwindCSS
+- [X] T006 [P] 在 `backend/pyproject.toml` 中配置 Python 代码检查工具（ruff, black, isort, mypy）
+- [X] T007 [P] 在 `frontend/` 中配置 ESLint 和 Prettier
+- [X] T008 [P] 创建环境配置文件: `backend/.env.example`, `frontend/.env.example`
+- [X] T009 [P] 在 `backend/pyproject.toml` 中配置 pytest
+- [X] T010 [P] 在 `frontend/vite.config.ts` 中配置 Vitest
 
 ---
 
@@ -46,42 +46,42 @@
 
 ### 后端核心
 
-- [ ] T011 在 `backend/src/models/enums.py` 中创建基础 Pydantic 模型和枚举（ValidationStatus, FileType, ErrorCode, ExecutionStatus, LogType, MessageRole, ToolCallStatus）
-- [ ] T012 [P] 在 `backend/src/models/validation.py` 中创建 ValidationError 模型
-- [ ] T013 [P] 在 `backend/src/models/skill_file.py` 中创建 SkillFile 模型
-- [ ] T014 [P] 在 `backend/src/models/skill_metadata.py` 中创建 SkillMetadata 模型
-- [ ] T015 在 `backend/src/models/skill_package.py` 中创建 SkillPackage 模型（依赖 T012, T013, T014）
-- [ ] T016 [P] 在 `backend/src/models/execution.py` 中创建 Message 和 ToolCall 模型
-- [ ] T017 [P] 在 `backend/src/models/log_content.py` 中创建 LogContent 联合类型
-- [ ] T018 在 `backend/src/models/execution.py` 中创建 ExecutionSession, ExecutionResult, ExecutionError, ExecutionLog 模型（依赖 T016, T017）
-- [ ] T019 在 `backend/src/models/__init__.py` 中创建包含所有导出的模型索引
-- [ ] T020 [P] 在 `backend/src/main.py` 中创建带有 CORS 中间件的 FastAPI 应用
-- [ ] T021 [P] 在 `backend/src/api/__init__.py` 中创建 API 路由结构
-- [ ] T022 [P] 在 `backend/src/utils/errors.py` 中创建错误处理工具和异常类
-- [ ] T023 [P] 在 `backend/src/utils/config.py` 中创建配置管理（环境变量加载）
+- [X] T011 在 `backend/src/models/enums.py` 中创建基础 Pydantic 模型和枚举（ValidationStatus, FileType, ErrorCode, ExecutionStatus, LogType, MessageRole, ToolCallStatus）
+- [X] T012 [P] 在 `backend/src/models/validation.py` 中创建 ValidationError 模型
+- [X] T013 [P] 在 `backend/src/models/skill_file.py` 中创建 SkillFile 模型
+- [X] T014 [P] 在 `backend/src/models/skill_metadata.py` 中创建 SkillMetadata 模型
+- [X] T015 在 `backend/src/models/skill_package.py` 中创建 SkillPackage 模型（依赖 T012, T013, T014）
+- [X] T016 [P] 在 `backend/src/models/execution.py` 中创建 Message 和 ToolCall 模型
+- [X] T017 [P] 在 `backend/src/models/log_content.py` 中创建 LogContent 联合类型
+- [X] T018 在 `backend/src/models/execution.py` 中创建 ExecutionSession, ExecutionResult, ExecutionError, ExecutionLog 模型（依赖 T016, T017）
+- [X] T019 在 `backend/src/models/__init__.py` 中创建包含所有导出的模型索引
+- [X] T020 [P] 在 `backend/src/main.py` 中创建带有 CORS 中间件的 FastAPI 应用
+- [X] T021 [P] 在 `backend/src/api/__init__.py` 中创建 API 路由结构
+- [X] T022 [P] 在 `backend/src/utils/errors.py` 中创建错误处理工具和异常类
+- [X] T023 [P] 在 `backend/src/utils/config.py` 中创建配置管理（环境变量加载）
 
 ### opencode Python 客户端
 
-- [ ] T024 在 `backend/src/opencode/models.py` 中创建 opencode 客户端 Pydantic 模型
-- [ ] T025 [P] 在 `backend/src/opencode/events.py` 中创建 SSE 事件流处理器
-- [ ] T026 [P] 在 `backend/src/opencode/session.py` 中创建会话 API 封装
-- [ ] T027 [P] 在 `backend/src/opencode/config.py` 中创建配置 API 封装
-- [ ] T028 在 `backend/src/opencode/client.py` 中创建主 OpencodeClient 类（依赖 T024, T025, T026, T027）
-- [ ] T029 在 `backend/src/opencode/__init__.py` 中创建 opencode 客户端导出
+- [X] T024 在 `backend/src/opencode/models.py` 中创建 opencode 客户端 Pydantic 模型
+- [X] T025 [P] 在 `backend/src/opencode/events.py` 中创建 SSE 事件流处理器
+- [X] T026 [P] 在 `backend/src/opencode/session.py` 中创建会话 API 封装
+- [X] T027 [P] 在 `backend/src/opencode/config.py` 中创建配置 API 封装
+- [X] T028 在 `backend/src/opencode/client.py` 中创建主 OpencodeClient 类（依赖 T024, T025, T026, T027）
+- [X] T029 在 `backend/src/opencode/__init__.py` 中创建 opencode 客户端导出
 
 ### 前端核心
 
-- [ ] T030 [P] 在 `frontend/src/types/models.ts` 中创建 API 模型的 TypeScript 类型
-- [ ] T031 [P] 在 `frontend/src/types/api.ts` 中创建 API 响应的 TypeScript 类型
-- [ ] T032 [P] 在 `frontend/src/services/api.ts` 中创建带有 fetch 封装的基础 API 服务
-- [ ] T033 [P] 在 `frontend/src/hooks/useAppState.tsx` 中创建应用状态的 React Context
-- [ ] T034 [P] 在 `frontend/src/App.tsx` 中创建带有路由的主 App 组件
-- [ ] T035 在 `frontend/src/pages/MainPage.tsx` 中创建主页面布局组件
+- [X] T030 [P] 在 `frontend/src/types/models.ts` 中创建 API 模型的 TypeScript 类型
+- [X] T031 [P] 在 `frontend/src/types/api.ts` 中创建 API 响应的 TypeScript 类型
+- [X] T032 [P] 在 `frontend/src/services/api.ts` 中创建带有 fetch 封装的基础 API 服务
+- [X] T033 [P] 在 `frontend/src/hooks/useAppState.tsx` 中创建应用状态的 React Context
+- [X] T034 [P] 在 `frontend/src/App.tsx` 中创建带有路由的主 App 组件
+- [X] T035 在 `frontend/src/pages/MainPage.tsx` 中创建主页面布局组件
 
 ### 健康检查端点
 
-- [ ] T036 在 `backend/src/api/health.py` 中实现 GET /health 端点
-- [ ] T037 在 `backend/tests/contract/test_health.py` 中编写健康检查端点的契约测试
+- [X] T036 在 `backend/src/api/health.py` 中实现 GET /health 端点
+- [X] T037 在 `backend/tests/contract/test_health.py` 中编写健康检查端点的契约测试
 
 **检查点**: 基础设施就绪 - 现在可以开始用户故事实现
 
@@ -97,30 +97,30 @@
 
 > **注意: 先编写这些测试，确保在实现之前测试失败**
 
-- [ ] T038 [P] [US1] 在 `backend/tests/contract/test_upload.py` 中编写 POST /skills/upload 的契约测试
-- [ ] T039 [P] [US1] 在 `backend/tests/contract/test_skill_get.py` 中编写 GET /skills/{skill_id} 的契约测试
-- [ ] T040 [P] [US1] 在 `backend/tests/unit/test_zip_extractor.py` 中编写 zip 解压的单元测试
-- [ ] T041 [P] [US1] 在 `backend/tests/unit/test_skill_validator.py` 中编写 SKILL.md 验证的单元测试
-- [ ] T042 [P] [US1] 在 `backend/tests/unit/test_yaml_parser.py` 中编写 YAML frontmatter 解析的单元测试
+- [X] T038 [P] [US1] 在 `backend/tests/contract/test_upload.py` 中编写 POST /skills/upload 的契约测试
+- [X] T039 [P] [US1] 在 `backend/tests/contract/test_skill_get.py` 中编写 GET /skills/{skill_id} 的契约测试
+- [X] T040 [P] [US1] 在 `backend/tests/unit/test_zip_extractor.py` 中编写 zip 解压的单元测试
+- [X] T041 [P] [US1] 在 `backend/tests/unit/test_skill_validator.py` 中编写 SKILL.md 验证的单元测试
+- [X] T042 [P] [US1] 在 `backend/tests/unit/test_yaml_parser.py` 中编写 YAML frontmatter 解析的单元测试
 - [ ] T043 [P] [US1] 在 `frontend/tests/components/UploadZone.test.tsx` 中编写 UploadZone 的前端组件测试
 
 ### 用户故事 1 的实现
 
-- [ ] T044 [US1] 在 `backend/src/utils/zip_extractor.py` 中创建 zip 解压工具（最大 10MB，zip 炸弹防护，路径遍历防护）
-- [ ] T045 [US1] 在 `backend/src/utils/yaml_parser.py` 中创建 YAML frontmatter 解析工具
-- [ ] T046 [US1] 在 `backend/src/services/skill_validator.py` 中创建 SKILL.md 验证器（依赖 T044, T045）
-- [ ] T047 [US1] 在 `backend/src/utils/file_utils.py` 中创建文件类型检测工具（二进制检测，从扩展名判断文件类型）
-- [ ] T048 [US1] 在 `backend/src/services/skill_storage.py` 中创建内存技能包存储服务
-- [ ] T049 [US1] 在 `backend/src/services/skill_service.py` 中创建技能包管理服务（依赖 T046, T047, T048）
-- [ ] T050 [US1] 在 `backend/src/api/skills.py` 中实现 POST /skills/upload 端点（依赖 T049）；必须验证文件大小不超过 10MB，超出返回 413 错误
-- [ ] T051 [US1] 在 `backend/src/api/skills.py` 中实现 GET /skills/{skill_id} 端点
-- [ ] T052 [US1] 在 `backend/src/api/skills.py` 中实现 DELETE /skills/{skill_id} 端点
-- [ ] T053 [P] [US1] 在 `frontend/src/components/upload/UploadZone.tsx` 中创建带有拖放功能的 UploadZone 组件
-- [ ] T054 [P] [US1] 在 `frontend/src/components/upload/ValidationResult.tsx` 中创建 ValidationResult 组件
-- [ ] T055 [P] [US1] 在 `frontend/src/components/upload/SkillMetadataCard.tsx` 中创建 SkillMetadataCard 组件
-- [ ] T056 [US1] 在 `frontend/src/services/skillsApi.ts` 中创建技能 API 服务
-- [ ] T057 [US1] 在 `frontend/src/hooks/useSkillUpload.ts` 中创建 useSkillUpload hook
-- [ ] T058 [US1] 在 `frontend/src/pages/MainPage.tsx` 中集成上传组件
+- [X] T044 [US1] 在 `backend/src/utils/zip_extractor.py` 中创建 zip 解压工具（最大 10MB，zip 炸弹防护，路径遍历防护）
+- [X] T045 [US1] 在 `backend/src/utils/yaml_parser.py` 中创建 YAML frontmatter 解析工具
+- [X] T046 [US1] 在 `backend/src/services/skill_validator.py` 中创建 SKILL.md 验证器（依赖 T044, T045）
+- [X] T047 [US1] 在 `backend/src/utils/file_utils.py` 中创建文件类型检测工具（二进制检测，从扩展名判断文件类型）
+- [X] T048 [US1] 在 `backend/src/services/skill_storage.py` 中创建内存技能包存储服务
+- [X] T049 [US1] 在 `backend/src/services/skill_service.py` 中创建技能包管理服务（依赖 T046, T047, T048）
+- [X] T050 [US1] 在 `backend/src/api/skills.py` 中实现 POST /skills/upload 端点（依赖 T049）；必须验证文件大小不超过 10MB，超出返回 413 错误
+- [X] T051 [US1] 在 `backend/src/api/skills.py` 中实现 GET /skills/{skill_id} 端点
+- [X] T052 [US1] 在 `backend/src/api/skills.py` 中实现 DELETE /skills/{skill_id} 端点
+- [X] T053 [P] [US1] 在 `frontend/src/components/upload/UploadZone.tsx` 中创建带有拖放功能的 UploadZone 组件
+- [X] T054 [P] [US1] 在 `frontend/src/components/upload/ValidationResult.tsx` 中创建 ValidationResult 组件
+- [X] T055 [P] [US1] 在 `frontend/src/components/upload/SkillMetadataCard.tsx` 中创建 SkillMetadataCard 组件
+- [X] T056 [US1] 在 `frontend/src/services/skillsApi.ts` 中创建技能 API 服务
+- [X] T057 [US1] 在 `frontend/src/hooks/useSkillUpload.ts` 中创建 useSkillUpload hook
+- [X] T058 [US1] 在 `frontend/src/pages/MainPage.tsx` 中集成上传组件
 
 **检查点**: 用户故事 1 完成 - 用户可以上传和验证技能包
 
@@ -141,15 +141,15 @@
 
 ### 用户故事 2 的实现
 
-- [ ] T063 [US2] 在 `backend/src/utils/file_tree.py` 中创建文件树构建工具
-- [ ] T064 [US2] 在 `backend/src/api/skills.py` 中实现 GET /skills/{skill_id}/files 端点（依赖 T063）
-- [ ] T065 [US2] 在 `backend/src/api/skills.py` 中实现 GET /skills/{skill_id}/files/{file_path} 端点
-- [ ] T066 [P] [US2] 在 `frontend/src/components/explorer/FileTree.tsx` 中使用 react-arborist 创建 FileTree 组件
-- [ ] T067 [P] [US2] 在 `frontend/src/components/explorer/FileTreeNode.tsx` 中创建 FileTreeNode 组件
-- [ ] T068 [US2] 在 `frontend/src/components/explorer/FilePreview.tsx` 中创建带有语法高亮的 FilePreview 组件；对于二进制文件显示"不可预览"提示和文件大小信息
-- [ ] T069 [US2] 在 `frontend/src/components/explorer/SkillMetadataViewer.tsx` 中创建 SkillMetadataViewer 组件（结构化 YAML 显示）
-- [ ] T070 [US2] 在 `frontend/src/hooks/useFileExplorer.ts` 中创建 useFileExplorer hook
-- [ ] T071 [US2] 在 `frontend/src/pages/MainPage.tsx` 中集成浏览器组件
+- [X] T063 [US2] 在 `backend/src/utils/file_tree.py` 中创建文件树构建工具
+- [X] T064 [US2] 在 `backend/src/api/skills.py` 中实现 GET /skills/{skill_id}/files 端点（依赖 T063）
+- [X] T065 [US2] 在 `backend/src/api/skills.py` 中实现 GET /skills/{skill_id}/files/{file_path} 端点
+- [X] T066 [P] [US2] 在 `frontend/src/components/explorer/FileTree.tsx` 中使用 react-arborist 创建 FileTree 组件
+- [X] T067 [P] [US2] 在 `frontend/src/components/explorer/FileTreeNode.tsx` 中创建 FileTreeNode 组件
+- [X] T068 [US2] 在 `frontend/src/components/explorer/FilePreview.tsx` 中创建带有语法高亮的 FilePreview 组件；对于二进制文件显示"不可预览"提示和文件大小信息
+- [X] T069 [US2] 在 `frontend/src/components/explorer/SkillMetadataViewer.tsx` 中创建 SkillMetadataViewer 组件（结构化 YAML 显示）
+- [X] T070 [US2] 在 `frontend/src/hooks/useFileExplorer.ts` 中创建 useFileExplorer hook
+- [X] T071 [US2] 在 `frontend/src/pages/MainPage.tsx` 中集成浏览器组件
 
 **检查点**: 用户故事 1 和 2 完成 - 用户可以上传、验证、浏览和预览技能内容
 
@@ -170,17 +170,17 @@
 
 ### 用户故事 3 的实现
 
-- [ ] T076 [US3] 在 `backend/src/utils/zip_repacker.py` 中创建 zip 重新打包工具
-- [ ] T077 [US3] 在 `backend/src/api/skills.py` 中实现 PUT /skills/{skill_id}/files/{file_path} 端点
-- [ ] T078 [US3] 在 `backend/src/api/skills.py` 中实现 POST /skills/{skill_id}/repack 端点（依赖 T076）
-- [ ] T079 [US3] 在 `backend/src/api/skills.py` 中实现 GET /skills/{skill_id}/download 端点
-- [ ] T080 [US3] 在 `frontend/src/components/editor/CodeEditor.tsx` 中使用 Monaco Editor 创建 CodeEditor 组件
-- [ ] T081 [US3] 在 `frontend/src/components/editor/EditorToolbar.tsx` 中创建 EditorToolbar 组件（保存、还原按钮）
-- [ ] T082 [US3] 在 `frontend/src/components/editor/UnsavedChangesIndicator.tsx` 中创建 UnsavedChangesIndicator 组件
-- [ ] T083 [US3] 在 `frontend/src/hooks/useFileEditor.ts` 中创建带有未保存更改追踪的 useFileEditor hook
-- [ ] T084 [US3] 在 `frontend/src/components/editor/RepackButton.tsx` 中创建带有下载触发的 RepackButton 组件
-- [ ] T085 [US3] 在 `frontend/src/hooks/useUnsavedChangesWarning.ts` 中添加未保存更改警告提示
-- [ ] T086 [US3] 在 `frontend/src/pages/MainPage.tsx` 中集成编辑器组件
+- [X] T076 [US3] 在 `backend/src/utils/zip_repacker.py` 中创建 zip 重新打包工具
+- [X] T077 [US3] 在 `backend/src/api/skills.py` 中实现 PUT /skills/{skill_id}/files/{file_path} 端点
+- [X] T078 [US3] 在 `backend/src/api/skills.py` 中实现 POST /skills/{skill_id}/repack 端点（依赖 T076）
+- [X] T079 [US3] 在 `backend/src/api/skills.py` 中实现 GET /skills/{skill_id}/download 端点
+- [X] T080 [US3] 在 `frontend/src/components/editor/CodeEditor.tsx` 中使用 Monaco Editor 创建 CodeEditor 组件
+- [X] T081 [US3] 在 `frontend/src/components/editor/EditorToolbar.tsx` 中创建 EditorToolbar 组件（保存、还原按钮）
+- [X] T082 [US3] 在 `frontend/src/components/editor/UnsavedChangesIndicator.tsx` 中创建 UnsavedChangesIndicator 组件
+- [X] T083 [US3] 在 `frontend/src/hooks/useFileEditor.ts` 中创建带有未保存更改追踪的 useFileEditor hook
+- [X] T084 [US3] 在 `frontend/src/components/editor/RepackButton.tsx` 中创建带有下载触发的 RepackButton 组件
+- [X] T085 [US3] 在 `frontend/src/hooks/useUnsavedChangesWarning.ts` 中添加未保存更改警告提示
+- [X] T086 [US3] 在 `frontend/src/pages/MainPage.tsx` 中集成编辑器组件
 
 **检查点**: 用户故事 1、2 和 3 完成 - 用户可以上传、浏览、编辑和重新打包技能
 
@@ -203,22 +203,22 @@
 
 ### 用户故事 4 的实现
 
-- [ ] T093 [US4] 在 `backend/src/services/execution_storage.py` 中创建执行会话存储服务
-- [ ] T094 [US4] 在 `backend/src/services/execution_service.py` 中创建技能执行服务（与 opencode 客户端集成）；必须实现 5 分钟执行超时，超时后自动终止并返回超时错误
-- [ ] T095 [US4] 在 `backend/src/api/executions.py` 中实现 POST /skills/{skill_id}/execute 端点（依赖 T094）
-- [ ] T096 [US4] 在 `backend/src/api/executions.py` 中实现 GET /executions/{session_id}/stream SSE 端点
-- [ ] T097 [US4] 在 `backend/src/api/executions.py` 中实现 POST /executions/{session_id}/cancel 端点
-- [ ] T098 [US4] 在 `backend/src/api/config.py` 中实现 GET /config/providers 端点
-- [ ] T099 [US4] 在 `backend/src/api/config.py` 中实现 GET /config/agents 端点
-- [ ] T100 [P] [US4] 在 `frontend/src/components/runner/PromptInput.tsx` 中创建 PromptInput 组件
-- [ ] T101 [P] [US4] 在 `frontend/src/components/runner/ModelSelector.tsx` 中创建 ModelSelector 组件
-- [ ] T102 [P] [US4] 在 `frontend/src/components/runner/RunButton.tsx` 中创建 RunButton 组件
-- [ ] T103 [US4] 在 `frontend/src/components/runner/ExecutionProgress.tsx` 中创建 ExecutionProgress 组件（流式显示）
-- [ ] T104 [US4] 在 `frontend/src/components/runner/CancelButton.tsx` 中创建 CancelButton 组件
-- [ ] T105 [US4] 在 `frontend/src/services/executionsApi.ts` 中创建带有 SSE 支持的执行 API 服务
-- [ ] T106 [US4] 在 `frontend/src/hooks/useSkillExecution.ts` 中创建 useSkillExecution hook
-- [ ] T107 [US4] 在 `frontend/src/components/runner/SkillRunner.tsx` 中创建 SkillRunner 页面/面板
-- [ ] T108 [US4] 在 `frontend/src/pages/MainPage.tsx` 中集成运行器组件
+- [X] T093 [US4] 在 `backend/src/services/execution_storage.py` 中创建执行会话存储服务
+- [X] T094 [US4] 在 `backend/src/services/execution_service.py` 中创建技能执行服务（与 opencode 客户端集成）；必须实现 5 分钟执行超时，超时后自动终止并返回超时错误
+- [X] T095 [US4] 在 `backend/src/api/executions.py` 中实现 POST /skills/{skill_id}/execute 端点（依赖 T094）
+- [X] T096 [US4] 在 `backend/src/api/executions.py` 中实现 GET /executions/{session_id}/stream SSE 端点
+- [X] T097 [US4] 在 `backend/src/api/executions.py` 中实现 POST /executions/{session_id}/cancel 端点
+- [X] T098 [US4] 在 `backend/src/api/config.py` 中实现 GET /config/providers 端点
+- [X] T099 [US4] 在 `backend/src/api/config.py` 中实现 GET /config/agents 端点
+- [X] T100 [P] [US4] 在 `frontend/src/components/runner/PromptInput.tsx` 中创建 PromptInput 组件
+- [X] T101 [P] [US4] 在 `frontend/src/components/runner/ModelSelector.tsx` 中创建 ModelSelector 组件
+- [X] T102 [P] [US4] 在 `frontend/src/components/runner/RunButton.tsx` 中创建 RunButton 组件
+- [X] T103 [US4] 在 `frontend/src/components/runner/ExecutionProgress.tsx` 中创建 ExecutionProgress 组件（流式显示）
+- [X] T104 [US4] 在 `frontend/src/components/runner/CancelButton.tsx` 中创建 CancelButton 组件
+- [X] T105 [US4] 在 `frontend/src/services/executionsApi.ts` 中创建带有 SSE 支持的执行 API 服务
+- [X] T106 [US4] 在 `frontend/src/hooks/useSkillExecution.ts` 中创建 useSkillExecution hook
+- [X] T107 [US4] 在 `frontend/src/components/runner/SkillRunner.tsx` 中创建 SkillRunner 页面/面板
+- [X] T108 [US4] 在 `frontend/src/pages/MainPage.tsx` 中集成运行器组件
 
 **检查点**: 用户故事 1-4 完成 - 用户可以上传、浏览、编辑和运行技能
 
@@ -239,16 +239,16 @@
 
 ### 用户故事 5 的实现
 
-- [ ] T113 [US5] 在 `backend/src/api/executions.py` 中实现 GET /executions/{session_id} 端点
-- [ ] T114 [US5] 在 `backend/src/api/executions.py` 中实现 GET /executions/{session_id}/logs 端点
-- [ ] T115 [US5] 在 `backend/src/api/executions.py` 中实现 GET /executions 端点（历史列表）
-- [ ] T116 [P] [US5] 在 `frontend/src/components/logs/ConversationHistory.tsx` 中创建 ConversationHistory 组件
-- [ ] T117 [P] [US5] 在 `frontend/src/components/logs/ToolCallViewer.tsx` 中创建 ToolCallViewer 组件
-- [ ] T118 [P] [US5] 在 `frontend/src/components/logs/ErrorDisplay.tsx` 中创建 ErrorDisplay 组件
-- [ ] T119 [US5] 在 `frontend/src/components/logs/ExecutionHistoryList.tsx` 中创建 ExecutionHistoryList 组件
-- [ ] T120 [US5] 在 `frontend/src/components/logs/ExecutionDetailPanel.tsx` 中创建 ExecutionDetailPanel 组件
-- [ ] T121 [US5] 在 `frontend/src/hooks/useExecutionLogs.ts` 中创建 useExecutionLogs hook
-- [ ] T122 [US5] 在 `frontend/src/pages/MainPage.tsx` 中集成日志组件
+- [X] T113 [US5] 在 `backend/src/api/executions.py` 中实现 GET /executions/{session_id} 端点
+- [X] T114 [US5] 在 `backend/src/api/executions.py` 中实现 GET /executions/{session_id}/logs 端点
+- [X] T115 [US5] 在 `backend/src/api/executions.py` 中实现 GET /executions 端点（历史列表）
+- [X] T116 [P] [US5] 在 `frontend/src/components/logs/ConversationHistory.tsx` 中创建 ConversationHistory 组件
+- [X] T117 [P] [US5] 在 `frontend/src/components/logs/ToolCallViewer.tsx` 中创建 ToolCallViewer 组件
+- [X] T118 [P] [US5] 在 `frontend/src/components/logs/ErrorDisplay.tsx` 中创建 ErrorDisplay 组件
+- [X] T119 [US5] 在 `frontend/src/components/logs/ExecutionHistoryList.tsx` 中创建 ExecutionHistoryList 组件
+- [X] T120 [US5] 在 `frontend/src/components/logs/ExecutionDetailPanel.tsx` 中创建 ExecutionDetailPanel 组件
+- [X] T121 [US5] 在 `frontend/src/hooks/useExecutionLogs.ts` 中创建 useExecutionLogs hook
+- [X] T122 [US5] 在 `frontend/src/pages/MainPage.tsx` 中集成日志组件
 
 **检查点**: 所有用户故事（1-5）完成 - 完整功能实现完毕
 
