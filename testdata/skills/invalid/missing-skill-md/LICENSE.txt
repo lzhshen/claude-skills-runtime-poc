@@ -1,0 +1,6 @@
+Apache License
+Version 2.0, January 2004
+http://www.apache.org/licenses/
+
+This is a test file for the missing-skill-md test case.
+The skill package is missing the required SKILL.md file.

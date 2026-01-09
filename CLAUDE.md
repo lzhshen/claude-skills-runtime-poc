@@ -1,29 +1,90 @@
 # claude-skills-runtime-poc Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-01-08
+Auto-generated from all feature plans. Last updated: 2026-01-09
 
 ## Active Technologies
 
-- (003-skills-runtime)
+- Python 3.11+ (FastAPI backend)
+- TypeScript 5.x + React 18.x (frontend)
+- TailwindCSS 3.x
+- Vite + Vitest (frontend build/test)
+- pytest + pytest-asyncio (backend test)
 
 ## Project Structure
 
 ```text
-src/
-tests/
+backend/                          # Python FastAPI 后端
+├── src/
+│   ├── models/                   # Pydantic 数据模型
+│   ├── services/                 # 业务逻辑
+│   ├── api/                      # FastAPI 路由
+│   ├── opencode/                 # opencode Python Client
+│   └── utils/                    # 工具函数
+└── tests/
+
+frontend/                         # React + TailwindCSS 前端
+├── src/
+│   ├── components/               # React 组件
+│   ├── pages/                    # 页面组件
+│   ├── services/                 # API 调用
+│   ├── hooks/                    # 自定义 hooks
+│   └── types/                    # TypeScript 类型
+└── tests/
+
+testdata/                         # 测试数据
+└── skills/
+    ├── valid/                    # 有效的 skill 包
+    │   ├── brand-guidelines/     # 简单结构 (来自 anthropics/skills)
+    │   └── slack-gif-creator/    # 复杂结构 (来自 anthropics/skills)
+    └── invalid/                  # 无效的 skill 包 (badcases)
+        ├── missing-skill-md/
+        ├── missing-name/
+        ├── missing-description/
+        └── invalid-yaml/
+
+specs/003-skills-runtime/         # 功能规格文档
+├── spec.md                       # 功能规格说明
+├── plan.md                       # 实现计划
+├── tasks.md                      # 任务清单
+├── testdata.md                   # 测试数据说明
+└── contracts/                    # API 契约
 ```
 
 ## Commands
 
-# Add commands for 
+```bash
+# 后端
+cd backend && uvicorn src.main:app --reload    # 启动后端服务
+cd backend && pytest                            # 运行后端测试
+
+# 前端
+cd frontend && npm run dev                      # 启动前端开发服务器
+cd frontend && npm run test                     # 运行前端测试
+cd frontend && npm run build                    # 构建前端
+
+# Docker
+docker-compose up                               # 启动所有服务
+```
 
 ## Code Style
 
-: Follow standard conventions
+- Python: ruff, black, isort, mypy
+- TypeScript: ESLint, Prettier
+- Follow standard conventions
+
+## Test Data
+
+测试数据位于 `testdata/skills/` 目录，包含：
+- **brand-guidelines**: 简单有效的 skill 包（来自 anthropics/skills）
+- **slack-gif-creator**: 复杂有效的 skill 包（来自 anthropics/skills）
+- **invalid/**: 各种无效 skill 包用于测试错误处理
+
+详见 `specs/003-skills-runtime/testdata.md`
 
 ## Recent Changes
 
 - 003-skills-runtime: Added
+- 2026-01-09: Added test data from anthropics/skills repository
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

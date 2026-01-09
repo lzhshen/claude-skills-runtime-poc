@@ -208,4 +208,27 @@ frontend/
 | `quickstart.md` | 快速启动指南 | ✅ 完成 |
 | `contracts/backend-api.md` | Python 后端 API 契约 | ✅ 完成 |
 | `architecture.md` | 部署架构设计 | ✅ 完成 |
-| `tasks.md` | 任务列表 | ⏳ 待生成 (`/speckit.tasks`) |
+| `tasks.md` | 任务列表 | ✅ 完成 |
+| `testdata.md` | 测试数据说明 | ✅ 完成 |
+
+## Test Data
+
+测试数据位于 `testdata/skills/` 目录，来源于 [anthropics/skills](https://github.com/anthropics/skills) 官方仓库。
+
+### 有效 Skill 包
+
+| Skill | 结构 | 用途 |
+|-------|------|------|
+| `brand-guidelines` | 简单（2 文件） | 最小有效 skill 基准测试 |
+| `slack-gif-creator` | 复杂（多目录、Python 代码） | 完整功能测试 |
+
+### 无效 Skill 包（Badcases）
+
+| 目录 | 问题 | 对应场景 |
+|------|------|----------|
+| `missing-skill-md` | 缺少 SKILL.md | P1 场景 2 |
+| `missing-name` | YAML 缺少 name 字段 | P1 场景 3 |
+| `missing-description` | YAML 缺少 description 字段 | P1 场景 3 |
+| `invalid-yaml` | YAML 语法错误 | P1 场景 3 |
+
+详见 [testdata.md](./testdata.md)
