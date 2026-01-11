@@ -1,0 +1,39 @@
+{
+  "experimental": {
+    "disable_paste_summary": true
+  },
+  "plugin": [
+    "oh-my-opencode"
+  ],
+  "provider": {
+    "local": {
+      "npm": "@ai-sdk/anthropic",
+      "name": "local",      
+      "options": {
+        "baseURL": "http://127.0.0.1:8045/v1",
+        "apiKey": "sk-31f6c8889db34ac5ad2648d958da4801"
+      },
+      "models": {
+        "claude-sonnet-4-5": {
+          "name": "Claude 4.5 Sonnet (Local)"
+        },
+        "claude-sonnet-4-5-thinking": {
+          "name": "Claude 4.5 Sonnet Thinking (Local)",
+           "reasoning": true
+        },
+        "claude-opus-4-5-thinking": {
+          "name": "Claude 4.5 Opus Thinking (Local)",
+          "reasoning": true
+        },
+        "gemini-3-flash": {
+          "name": "gemini-3-flash (Local)"
+        },
+        "gemini-3-pro-high": {
+          "name": "gemini-3-pro-high (Local)",
+          "reasoning": true
+        }
+      }
+    }
+  },
+  "$schema": "https://opencode.ai/config.json"
+}
