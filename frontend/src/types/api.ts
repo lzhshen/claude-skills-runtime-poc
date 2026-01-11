@@ -44,7 +44,7 @@ export interface HealthResponse {
  */
 export interface FileTreeResponse {
   tree: SkillFile[]
-  files: SkillFile[]  // Alias for compatibility
+  files?: SkillFile[]  // Alias for compatibility
 }
 
 /**

@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
+import Editor from '@monaco-editor/react'
 import type { SkillFile } from '@/types'
 
 interface CodeEditorProps {
@@ -29,8 +30,8 @@ function getLanguage(fileName: string): string {
     html: 'html',
     css: 'css',
     sql: 'sql',
-    sh: 'bash',
-    bash: 'bash',
+    sh: 'shell',
+    bash: 'shell',
     xml: 'xml',
   }
 
@@ -38,15 +39,14 @@ function getLanguage(fileName: string): string {
 }
 
 export function CodeEditor({ file, value, onChange, isReadOnly = false }: CodeEditorProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  // Simple theme detection (could be improved with a hook)
+  const [theme, setTheme] = useState<'vs-dark' | 'light'>('light')
 
   useEffect(() => {
-    // Auto-resize textarea based on content
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = `${Math.max(400, textareaRef.current.scrollHeight)}px`
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('vs-dark')
     }
-  }, [value])
+  }, [])
 
   if (!file) {
     return (
@@ -113,29 +113,23 @@ export function CodeEditor({ file, value, onChange, isReadOnly = false }: CodeEd
         )}
       </div>
 
-      {/* Editor area */}
-      <div className="flex-1 overflow-auto">
-        <div className="flex min-h-full">
-          {/* Line numbers */}
-          <div className="flex-shrink-0 px-3 py-4 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 text-right font-mono text-sm select-none border-r border-gray-200 dark:border-gray-700">
-            {value.split('\n').map((_, i) => (
-              <div key={i} className="leading-6">
-                {i + 1}
-              </div>
-            ))}
-          </div>
-
-          {/* Textarea */}
-          <textarea
-            ref={textareaRef}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            readOnly={isReadOnly}
-            className="flex-1 p-4 font-mono text-sm leading-6 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 resize-none outline-none border-none"
-            spellCheck={false}
-            style={{ minHeight: '400px' }}
-          />
-        </div>
+      {/* Monaco Editor */}
+      <div className="flex-1 overflow-hidden">
+        <Editor
+          height="100%"
+          language={language}
+          value={value}
+          theme={theme}
+          onChange={(val) => onChange(val || '')}
+          options={{
+            readOnly: isReadOnly,
+            minimap: { enabled: false },
+            scrollBeyondLastLine: false,
+            fontSize: 14,
+            automaticLayout: true,
+            padding: { top: 16, bottom: 16 },
+          }}
+        />
       </div>
     </div>
   )

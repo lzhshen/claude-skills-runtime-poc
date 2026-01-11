@@ -20,19 +20,49 @@ class ConfigAPI:
         response.raise_for_status()
         data = response.json()
 
-        providers = [
-            OpencodeProvider(id=p.get("id", ""), name=p.get("name", ""))
-            for p in data.get("providers", [])
-        ]
+        providers = []
+        models = []
 
-        models = [
-            OpencodeModel(
-                id=m.get("id", ""),
-                name=m.get("name", ""),
-                provider=m.get("provider", ""),
+        for p_data in data.get("providers", []):
+            p_id = p_data.get("id", "")
+            p_name = p_data.get("name", "")
+            providers.append(OpencodeProvider(id=p_id, name=p_name))
+
+            # Extract models. The 'local' provider (and possibly others) 
+            # seems to return models in a 'providers' dict key.
+            # We also check 'models' key if it exists.
+            
+            # Check 'models' key which was observed in logs
+            provider_models = p_data.get("models")
+            if not provider_models:
+                 # Fallback to 'providers' key just in case
+                 provider_models = p_data.get("providers")
+            
+            if isinstance(provider_models, dict):
+                for m_id, m_data in provider_models.items():
+                    models.append(OpencodeModel(
+                        id=m_data.get("id", m_id),
+                        name=m_data.get("name", m_id),
+                        provider=p_id,
+                    ))
+            elif isinstance(provider_models, list):
+                for m_data in provider_models:
+                    if isinstance(m_data, dict):
+                         models.append(OpencodeModel(
+                            id=m_data.get("id", ""),
+                            name=m_data.get("name", ""),
+                            provider=p_id,
+                         ))
+
+        # Also check global models list if present
+        for m in data.get("models", []):
+            models.append(
+                OpencodeModel(
+                    id=m.get("id", ""),
+                    name=m.get("name", ""),
+                    provider=m.get("provider", ""),
+                )
             )
-            for m in data.get("models", [])
-        ]
 
         return providers, models
 

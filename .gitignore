@@ -75,3 +75,5 @@ build/
 # Coverage
 coverage/
 *.lcov
+
+ralph-loop.local.md

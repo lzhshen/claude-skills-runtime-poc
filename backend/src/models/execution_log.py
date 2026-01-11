@@ -17,3 +17,5 @@ class ExecutionLog(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     log_type: LogType
     content: LogContent
+
+    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}

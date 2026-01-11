@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     execution_timeout_seconds: int = Field(default=300)
 
     # CORS settings
-    cors_origins: list[str] = Field(default=["http://localhost:5173"])
+    cors_origins: list[str] = Field(default=["http://localhost:5173", "http://127.0.0.1:5173"])
 
     class Config:
         env_file = ".env"

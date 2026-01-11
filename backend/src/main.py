@@ -40,11 +40,14 @@ def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     settings = get_settings()
 
+    from datetime import datetime
+
     app = FastAPI(
         title="Claude Skills Runtime",
         description="Runtime framework for testing Claude Skills",
         version="0.1.0",
         lifespan=lifespan,
+        json_encoders={datetime: lambda v: v.isoformat()},
     )
 
     # Configure CORS

@@ -49,7 +49,7 @@ function getFileIcon(fileType: string, isExpanded?: boolean): JSX.Element {
 export function FileTree({ files, selectedPath, onSelect, level = 0 }: FileTreeProps) {
   return (
     <div className={clsx('space-y-0.5', level > 0 && 'ml-4')}>
-      {files.map((file) => (
+      {files && files.map((file) => (
         <FileTreeNode
           key={file.path}
           file={file}
@@ -106,7 +106,7 @@ function FileTreeNode({ file, isSelected, onSelect, level }: FileTreeNodeProps) 
 
       {isDirectory && hasChildren && (
         <FileTree
-          files={file.children!}
+          files={file.children || []}
           selectedPath={null}
           onSelect={onSelect}
           level={level + 1}

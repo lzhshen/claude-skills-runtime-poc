@@ -127,8 +127,10 @@ VITE_API_BASE_URL=http://localhost:8000/api/v1
 
 **终端 1 - 启动 opencode 服务器**:
 ```bash
-opencode serve --port 3000 --cors http://localhost:5173
+opencode serve --port 3000 --hostname 127.0.0.1 --cors http://localhost:5173
 ```
+
+> **提示**: `--cors` 选项允许前端（Vite dev server 默认运行在 5173 端口）访问 opencode 服务器。如需允许多个来源，可多次指定 `--cors`。
 
 **终端 2 - 启动 Python 后端**:
 ```bash

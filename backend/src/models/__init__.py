@@ -31,6 +31,9 @@ from .skill_metadata import SkillMetadata
 from .skill_package import SkillPackage
 from .validation import ValidationError
 
+# Rebuild models to resolve forward references
+ExecutionSession.model_rebuild()
+
 __all__ = [
     # Enums
     "ValidationStatus",

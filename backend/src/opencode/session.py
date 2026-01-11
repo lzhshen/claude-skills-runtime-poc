@@ -14,9 +14,9 @@ class SessionAPI:
         self.base_url = base_url.rstrip("/")
         self.client = client
 
-    async def create(self, path: Optional[str] = None) -> OpencodeSession:
+    async def create(self, path: Optional[str] = None, **kwargs: Any) -> OpencodeSession:
         """Create a new session."""
-        payload: dict[str, Any] = {}
+        payload: dict[str, Any] = kwargs.copy()
         if path:
             payload["path"] = path
 
@@ -37,8 +37,9 @@ class SessionAPI:
         no_reply: bool = False,
     ) -> dict[str, Any]:
         """Send a prompt to a session."""
+        # Updated to match OpenCode API which expects 'parts' array
         payload = {
-            "content": content,
+            "parts": [{"type": "text", "text": content}],
         }
         if no_reply:
             payload["noReply"] = True
@@ -47,6 +48,8 @@ class SessionAPI:
             f"{self.base_url}/session/{session_id}/prompt_async",
             json=payload,
         )
+        if response.status_code >= 400:
+            print(f"ERROR: prompt_async failed: {response.status_code} {response.text}")
         response.raise_for_status()
         return response.json()
 

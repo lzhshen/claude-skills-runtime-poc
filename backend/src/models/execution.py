@@ -1,8 +1,11 @@
 """Execution-related models."""
 
+from __future__ import annotations
+
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, Any
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
@@ -16,9 +19,11 @@ class Message(BaseModel):
     content: str
     timestamp: datetime = Field(default_factory=datetime.utcnow)
 
+    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
+
 
 class ToolCall(BaseModel):
-    """Represents a tool call made by the AI assistant."""
+    """Represents a tool call made by AI assistant."""
 
     id: str
     name: str
@@ -28,6 +33,8 @@ class ToolCall(BaseModel):
     started_at: datetime = Field(default_factory=datetime.utcnow)
     ended_at: Optional[datetime] = None
 
+    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
+
 
 class ExecutionResult(BaseModel):
     """Result of a successful execution."""
@@ -35,6 +42,8 @@ class ExecutionResult(BaseModel):
     response: str
     messages: list[Message] = []
     tool_calls_count: int = 0
+
+    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
 
 
 class ExecutionError(BaseModel):
@@ -45,12 +54,16 @@ class ExecutionError(BaseModel):
     stack_trace: Optional[str] = None
     occurred_at: datetime = Field(default_factory=datetime.utcnow)
 
+    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
+
 
 class ModelConfig(BaseModel):
     """Model configuration for execution."""
 
     provider_id: str
     model_id: str
+
+    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
 
 
 class ExecutionSession(BaseModel):
@@ -68,3 +81,6 @@ class ExecutionSession(BaseModel):
     result: Optional[ExecutionResult] = None
     error: Optional[ExecutionError] = None
     opencode_session_id: Optional[str] = None
+    logs: List[ExecutionLog] = []
+
+    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}

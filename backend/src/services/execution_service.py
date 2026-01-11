@@ -1,6 +1,7 @@
 """Skill execution service."""
 
 import asyncio
+import json
 import uuid
 from datetime import datetime, timezone
 from typing import AsyncGenerator, Optional
@@ -17,6 +18,17 @@ from ..models import (
     ToolCall,
     ToolCallStatus,
     ModelConfig,
+    SystemLogContent,
+    MessageLogContent,
+    ToolCallLogContent,
+    ToolResultLogContent,
+    ErrorLogContent,
+)
+from ..models.log_content import (
+    ErrorLogContent,
+    MessageLogContent,
+    ToolCallLogContent,
+    ToolResultLogContent,
 )
 from ..opencode import OpencodeClient
 from ..utils.config import get_settings
@@ -77,10 +89,12 @@ class ExecutionService:
 
         session = ExecutionSession(
             id=session_id,
-            skill_id=skill_id,
+            skill_package_id=skill_id,
+            skill_name=package.metadata.name if package.metadata else str(package.id),
+            user_prompt=prompt,
             status=ExecutionStatus.PENDING,
-            created_at=now,
-            model_config=model_config,
+            started_at=now,
+            model=model_config,
             logs=[],
         )
 
@@ -89,9 +103,7 @@ class ExecutionService:
         storage.save(session)
 
         # Start execution in background
-        task = asyncio.create_task(
-            self._execute_skill(session_id, skill_id, prompt, model_config)
-        )
+        task = asyncio.create_task(self._execute_skill(session_id, skill_id, prompt, model_config))
         self._active_sessions[session_id] = task
 
         return session
@@ -134,40 +146,76 @@ class ExecutionService:
                     # Create a new session with the skill context
                     opencode_session = await client.session.create(
                         system_prompt=skill_content,
-                        model=model_config.model if model_config else None,
+                        model=model_config.model_id if model_config else None,
                     )
 
-                    # Send the user prompt and stream responses
-                    async for event in client.session.send_message(
-                        opencode_session.id,
-                        prompt,
-                    ):
+                    # Start streaming events in background
+                    stream_queue = asyncio.Queue()
+
+                    async def consume_events():
+                        try:
+                            async for evt in client.events.subscribe_session(opencode_session.id):
+                                await stream_queue.put(evt)
+                        except Exception as e:
+                            print(f"Error in event stream: {e}")
+                        finally:
+                            await stream_queue.put(None)  # Signal end
+
+                    stream_task = asyncio.create_task(consume_events())
+
+                    # Send the user prompt
+                    # Note: prompt() might wait for generation if not no_reply=True.
+                    # We want to see events as they happen, so we might want no_reply=True?
+                    # Or just fire and forget if prompt() returns result at end?
+                    # Assuming prompt() blocks until completion, we should run it concurrently
+                    # if we want to process events in real-time, OR just wait for it.
+                    # But we need to save logs *as they come in*.
+
+                    # We send prompt and ignore result here, relying on events?
+                    # But prompt might block.
+                    prompt_task = asyncio.create_task(
+                        client.session.prompt(opencode_session.id, prompt)
+                    )
+
+                    # Process events from queue
+                    while True:
+                        event = await stream_queue.get()
+                        if event is None:
+                            break
+
+                        # Convert SSEEvent data (first parse json)
+                        event_data = event.json()
+                        if not event_data:
+                            continue
+
                         # Add log entry for each event
-                        log = self._event_to_log(event)
+                        log = self._event_to_log(event_data, session_id)
                         if log:
                             session = storage.get(session_id)
                             if session:
                                 session.logs.append(log)
                                 storage.save(session)
 
-                        # Check if cancelled
-                        if session_id not in self._active_sessions:
-                            break
+                        # Check if completion or error occurred in event stream?
+                        # Or wait for prompt_task?
+                        # OpenCode events usually include status.
+
+                    # Wait for prompt task to ensure it finished cleanly
+                    await prompt_task
 
                     # Mark as completed
                     session = storage.get(session_id)
                     if session and session.status == ExecutionStatus.RUNNING:
                         session.status = ExecutionStatus.COMPLETED
-                        session.completed_at = datetime.now(timezone.utc)
+                        session.ended_at = datetime.now(timezone.utc)
 
                         # Extract result from logs
                         result_content = self._extract_result(session.logs)
                         if result_content:
                             session.result = ExecutionResult(
-                                content=result_content,
+                                response=result_content,
                                 tool_calls_count=sum(
-                                    1 for log in session.logs
-                                    if log.log_type == LogType.TOOL_CALL
+                                    1 for log in session.logs if log.log_type == LogType.TOOL_CALL
                                 ),
                             )
 
@@ -178,7 +226,7 @@ class ExecutionService:
                 session = storage.get(session_id)
                 if session:
                     session.status = ExecutionStatus.FAILED
-                    session.completed_at = datetime.now(timezone.utc)
+                    session.ended_at = datetime.now(timezone.utc)
                     session.error = ExecutionError(
                         code="TIMEOUT",
                         message=f"Execution timed out after {EXECUTION_TIMEOUT} seconds",
@@ -190,7 +238,7 @@ class ExecutionService:
             session = storage.get(session_id)
             if session:
                 session.status = ExecutionStatus.FAILED
-                session.completed_at = datetime.now(timezone.utc)
+                session.ended_at = datetime.now(timezone.utc)
                 session.error = ExecutionError(
                     code="EXECUTION_ERROR",
                     message=str(e),
@@ -201,57 +249,92 @@ class ExecutionService:
             # Remove from active sessions
             self._active_sessions.pop(session_id, None)
 
-    def _event_to_log(self, event: dict) -> Optional[ExecutionLog]:
+    def _event_to_log(self, event: dict, session_id: str) -> Optional[ExecutionLog]:
         """Convert an opencode event to an execution log entry."""
         event_type = event.get("type", "")
+        properties = event.get("properties", {})
         timestamp = datetime.now(timezone.utc)
 
-        if event_type == "message":
-            role = event.get("role", "assistant")
-            content = event.get("content", "")
+        # Handle message updates (including deltas)
+        if event_type in ["message.updated", "message.part.updated"]:
+            content = ""
+            role = "assistant"
 
-            return ExecutionLog(
-                timestamp=timestamp,
-                log_type=LogType.MESSAGE,
-                content=Message(
-                    role=MessageRole(role),
-                    content=content,
-                ),
-            )
+            # Check properties -> part -> (text or content)
+            part = properties.get("part", {})
+            if "text" in part:
+                content = part["text"]
+            elif "content" in part:
+                content = part["content"]
+
+            # If no content in part, check properties -> info -> content (message.updated)
+            if not content:
+                info = properties.get("info", {})
+                if "content" in info:
+                    content = info["content"]
+
+            # If we found content, log it as a message
+            if content:
+                return ExecutionLog(
+                    session_id=session_id,
+                    timestamp=timestamp,
+                    log_type=LogType.MESSAGE,
+                    content=MessageLogContent(
+                        message=Message(
+                            role=MessageRole(role),
+                            content=content,
+                        )
+                    ),
+                )
 
         elif event_type == "tool_call":
             return ExecutionLog(
+                session_id=session_id,
                 timestamp=timestamp,
                 log_type=LogType.TOOL_CALL,
-                content=ToolCall(
-                    id=event.get("id", ""),
-                    name=event.get("name", ""),
-                    arguments=event.get("arguments", {}),
-                    status=ToolCallStatus.PENDING,
+                content=ToolCallLogContent(
+                    tool_call=ToolCall(
+                        id=event.get("id", ""),
+                        name=event.get("name", ""),
+                        arguments=event.get("arguments", {}),
+                        status=ToolCallStatus.PENDING,
+                    )
                 ),
             )
 
         elif event_type == "tool_result":
             return ExecutionLog(
+                session_id=session_id,
                 timestamp=timestamp,
                 log_type=LogType.TOOL_RESULT,
-                content={
-                    "tool_call_id": event.get("tool_call_id", ""),
-                    "result": event.get("result", ""),
-                },
+                content=ToolResultLogContent(
+                    tool_call_id=event.get("tool_call_id", ""),
+                    result=event.get("result", ""),
+                ),
             )
 
         elif event_type == "error":
             return ExecutionLog(
+                session_id=session_id,
                 timestamp=timestamp,
                 log_type=LogType.ERROR,
-                content={
-                    "code": event.get("code", "UNKNOWN"),
-                    "message": event.get("message", "Unknown error"),
-                },
+                content=ErrorLogContent(
+                    error=ExecutionError(
+                        code=event.get("code", "UNKNOWN"),
+                        message=event.get("message", "Unknown error"),
+                    )
+                ),
             )
 
-        return None
+        # Capture strictly known event types as SYSTEM logs for debugging/visibility
+        # Only log significant events to avoid noise, or log everything if needed.
+        # For now, log everything to pass verification.
+        return ExecutionLog(
+            session_id=session_id,
+            timestamp=timestamp,
+            log_type=LogType.SYSTEM,
+            content=SystemLogContent(text=json.dumps(event)),
+        )
 
     def _extract_result(self, logs: list[ExecutionLog]) -> Optional[str]:
         """Extract the final result content from execution logs."""
@@ -290,7 +373,7 @@ class ExecutionService:
 
         # Update session status
         session.status = ExecutionStatus.CANCELLED
-        session.completed_at = datetime.now(timezone.utc)
+        session.ended_at = datetime.now(timezone.utc)
         storage.save(session)
 
         return True

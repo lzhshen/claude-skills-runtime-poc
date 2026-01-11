@@ -1,6 +1,7 @@
 """Execution API endpoints."""
 
 import json
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, status
@@ -10,6 +11,15 @@ from pydantic import BaseModel
 from ..models import ExecutionSession, ExecutionStatus, ModelConfig
 from ..services.execution_service import get_execution_service
 from ..utils.errors import NotFoundError, InvalidRequestError
+
+
+class DateTimeEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles datetime objects."""
+
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
 
 
 router = APIRouter(prefix="/executions", tags=["executions"])
@@ -30,6 +40,20 @@ class ExecuteResponse(BaseModel):
     status: str
 
 
+def _serialize_result(result) -> dict:
+    """Serialize ExecutionResult to JSON-serializable dict."""
+    if hasattr(result, "model_dump"):
+        return result.model_dump()
+    return result
+
+
+def _serialize_error(error) -> dict:
+    """Serialize ExecutionError to JSON-serializable dict."""
+    if hasattr(error, "model_dump"):
+        return error.model_dump()
+    return error
+
+
 @router.post("/skills/{skill_id}/execute", response_model=ExecuteResponse)
 async def execute_skill(skill_id: str, body: ExecuteRequest) -> ExecuteResponse:
     """Start executing a skill with the given prompt.
@@ -41,8 +65,8 @@ async def execute_skill(skill_id: str, body: ExecuteRequest) -> ExecuteResponse:
     model_config = None
     if body.model or body.provider:
         model_config = ModelConfig(
-            model=body.model,
-            provider=body.provider,
+            model_id=body.model,
+            provider_id=body.provider,
         )
 
     try:
@@ -77,31 +101,31 @@ async def stream_execution(session_id: str) -> StreamingResponse:
         """Generate SSE events from execution logs."""
         try:
             async for log in service.stream_logs(session_id):
-                # Format as SSE event
                 data = {
                     "timestamp": log.timestamp.isoformat(),
                     "type": log.log_type.value,
                     "content": _serialize_content(log.content),
                 }
-                yield f"data: {json.dumps(data)}\n\n"
+                yield f"data: {json.dumps(data, cls=DateTimeEncoder)}\n\n"
 
-            # Send completion event
             final_session = service.get_session(session_id)
             if final_session:
                 completion_data = {
                     "type": "complete",
                     "status": final_session.status.value,
-                    "result": final_session.result.model_dump() if final_session.result else None,
-                    "error": final_session.error.model_dump() if final_session.error else None,
+                    "result": _serialize_result(final_session.result)
+                    if final_session.result
+                    else None,
+                    "error": _serialize_error(final_session.error) if final_session.error else None,
                 }
-                yield f"data: {json.dumps(completion_data)}\n\n"
+                yield f"data: {json.dumps(completion_data, cls=DateTimeEncoder)}\n\n"
 
         except Exception as e:
             error_data = {
                 "type": "error",
                 "message": str(e),
             }
-            yield f"data: {json.dumps(error_data)}\n\n"
+            yield f"data: {json.dumps(error_data, cls=DateTimeEncoder)}\n\n"
 
     return StreamingResponse(
         event_generator(),
@@ -183,10 +207,10 @@ async def list_executions(skill_id: Optional[str] = None) -> dict:
         "sessions": [
             {
                 "id": s.id,
-                "skill_id": s.skill_id,
+                "skill_id": s.skill_package_id,
                 "status": s.status.value,
-                "created_at": s.created_at.isoformat(),
-                "completed_at": s.completed_at.isoformat() if s.completed_at else None,
+                "created_at": s.started_at.isoformat(),
+                "completed_at": s.ended_at.isoformat() if s.ended_at else None,
             }
             for s in sessions
         ],

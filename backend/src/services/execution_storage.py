@@ -25,10 +25,10 @@ class ExecutionStorage:
         sessions = list(self._sessions.values())
 
         if skill_id:
-            sessions = [s for s in sessions if s.skill_id == skill_id]
+            sessions = [s for s in sessions if s.skill_package_id == skill_id]
 
         # Sort by created_at descending (most recent first)
-        sessions.sort(key=lambda s: s.created_at, reverse=True)
+        sessions.sort(key=lambda s: s.started_at, reverse=True)
 
         return sessions
 
@@ -36,14 +36,14 @@ class ExecutionStorage:
         self,
         session_id: str,
         status: ExecutionStatus,
-        completed_at: Optional[datetime] = None,
+        ended_at: Optional[datetime] = None,
     ) -> Optional[ExecutionSession]:
-        """Update the status of an execution session."""
+        """Update status of an execution session."""
         session = self._sessions.get(session_id)
         if session:
             session.status = status
-            if completed_at:
-                session.completed_at = completed_at
+            if ended_at:
+                session.ended_at = ended_at
             self._sessions[session_id] = session
         return session
 

@@ -11,29 +11,8 @@ router = APIRouter(prefix="/config", tags=["config"])
 @router.get("/providers")
 async def get_providers() -> dict:
     """Get available AI providers and their models."""
-    settings = get_settings()
-
-    # Return configured providers
-    # In a real implementation, this would query the opencode server
-    providers = [
-        {
-            "id": "anthropic",
-            "name": "Anthropic",
-            "models": [
-                {"id": "claude-sonnet-4-20250514", "name": "Claude Sonnet 4"},
-                {"id": "claude-3-5-sonnet-20241022", "name": "Claude 3.5 Sonnet"},
-                {"id": "claude-3-5-haiku-20241022", "name": "Claude 3.5 Haiku"},
-            ],
-        },
-        {
-            "id": "openai",
-            "name": "OpenAI",
-            "models": [
-                {"id": "gpt-4o", "name": "GPT-4o"},
-                {"id": "gpt-4o-mini", "name": "GPT-4o Mini"},
-            ],
-        },
-    ]
+    # Fixed model list with GLM-4.7 as default
+    providers = [{"id": "local", "name": "Local", "models": [{"id": "GLM-4.7", "name": "GLM-4.7"}]}]
 
     return {"providers": providers}
 

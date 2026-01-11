@@ -64,6 +64,20 @@ cd frontend && npm run build                    # 构建前端
 
 # Docker
 docker-compose up                               # 启动所有服务
+
+# opencode 服务
+# 基本启动（默认: port=4096, hostname=127.0.0.1）
+opencode serve
+
+# 开发环境（允许前端访问）
+opencode serve --port 4096 --hostname 127.0.0.1 --cors http://localhost:5173
+
+# 选项说明:
+#   --port <number>     端口号（默认: 4096）
+#   --hostname <string> 主机名（默认: 127.0.0.1）
+#   --cors <origin>     允许的浏览器来源（可多次指定）
+#   --mdns              启用 mDNS 发现
+
 ```
 
 ## Code Style

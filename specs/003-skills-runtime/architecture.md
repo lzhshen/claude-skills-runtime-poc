@@ -311,7 +311,9 @@ set -e
 
 SKILL_DIR="/workspace/skill"
 OPENCODE_PORT="${OPENCODE_PORT:-3000}"
+OPENCODE_HOSTNAME="${OPENCODE_HOSTNAME:-0.0.0.0}"
 CALLBACK_URL="${CALLBACK_URL:-}"
+CORS_ORIGINS="${CORS_ORIGINS:-}"
 
 echo "[Runner] Starting skill runner..."
 
@@ -325,7 +327,19 @@ echo "[Runner] Skill package found at $SKILL_DIR"
 
 # 启动 opencode server
 cd "$SKILL_DIR"
-opencode serve --port "$OPENCODE_PORT" &
+OPENCODE_ARGS="--port $OPENCODE_PORT --hostname $OPENCODE_HOSTNAME"
+
+# 添加 CORS 选项（如果指定）
+if [ -n "$CORS_ORIGINS" ]; then
+    # CORS_ORIGINS 可以是逗号分隔的列表
+    IFS=',' read -ra ORIGINS <<< "$CORS_ORIGINS"
+    for origin in "${ORIGINS[@]}"; do
+        OPENCODE_ARGS="$OPENCODE_ARGS --cors $origin"
+    done
+fi
+
+echo "[Runner] Starting opencode server: opencode serve $OPENCODE_ARGS"
+opencode serve $OPENCODE_ARGS &
 OPENCODE_PID=$!
 
 # 等待 server 就绪
