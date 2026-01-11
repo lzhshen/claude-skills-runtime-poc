@@ -92,6 +92,7 @@ opencode serve --port 4096 --hostname 127.0.0.1 --cors http://localhost:5173
 - **brand-guidelines**: 简单有效的 skill 包（来自 anthropics/skills）
 - **slack-gif-creator**: 复杂有效的 skill 包（来自 anthropics/skills）
 - **invalid/**: 各种无效 skill 包用于测试错误处理
+- ** 非目录文件 **: 是 invalid/valid  skill 压缩包，可以直接用于测试，不需要重复生成（除非上述 skill 内容发生了变化）
 
 详见 `specs/003-skills-runtime/testdata.md`
 
