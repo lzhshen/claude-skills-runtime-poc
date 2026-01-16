@@ -21,9 +21,11 @@ interface UseSkillExecutionResult {
   selectedProvider: string
   selectedModel: string
   prompt: string
+  debugMode: boolean
   setPrompt: (prompt: string) => void
   setSelectedProvider: (provider: string) => void
   setSelectedModel: (model: string) => void
+  setDebugMode: (debug: boolean) => void
   startExecution: () => Promise<void>
   cancelCurrentExecution: () => Promise<void>
   clearLogs: () => void
@@ -40,6 +42,7 @@ export function useSkillExecution(): UseSkillExecutionResult {
   const [selectedProvider, setSelectedProvider] = useState('')
   const [selectedModel, setSelectedModel] = useState('')
   const [prompt, setPrompt] = useState('')
+  const [debugMode, setDebugMode] = useState(false)
 
   const cleanupRef = useRef<(() => void) | null>(null)
 
@@ -83,13 +86,43 @@ export function useSkillExecution(): UseSkillExecutionResult {
       setStatus('failed')
       setError(event.message || 'Unknown error')
     } else {
-      // Add log entry
       const log: ExecutionLog = {
         timestamp: event.timestamp || new Date().toISOString(),
         type: event.type,
         content: event.content || {},
       }
-      setLogs((prev) => [...prev, log])
+
+      setLogs((prev) => {
+        if (event.type === 'message' && event.content?.message) {
+          const msg = event.content.message as { role: string; content: string }
+          const newContent = msg.content?.trim() || ''
+
+          const existingIdx = prev.findIndex((l) => {
+            if (l.type !== 'message') return false
+            const lMsg = (l.content as { message?: { role: string; content: string } })?.message
+            if (!lMsg) return false
+            if (lMsg.role !== msg.role) return false
+            const existingContent = lMsg.content?.trim() || ''
+            if (!existingContent || !newContent) return false
+            // Only match if one is a prefix of the other (same message being updated)
+            return newContent.startsWith(existingContent) || existingContent.startsWith(newContent)
+          })
+
+          if (existingIdx >= 0) {
+            // Only update if new content is longer (streaming adds more content)
+            const existingMsg = (prev[existingIdx].content as { message?: { role: string; content: string } })?.message
+            const existingLen = existingMsg?.content?.trim().length || 0
+            if (newContent.length >= existingLen) {
+              const updated = [...prev]
+              updated[existingIdx] = log
+              return updated
+            }
+            // New content is shorter, keep the existing longer content
+            return prev
+          }
+        }
+        return [...prev, log]
+      })
     }
   }, [])
 
@@ -129,13 +162,23 @@ export function useSkillExecution(): UseSkillExecutionResult {
         response.session_id,
         handleEvent,
         handleError,
-        handleComplete
+        handleComplete,
+        debugMode
       )
     } catch (err) {
       setStatus('failed')
       setError(err instanceof Error ? err.message : 'Failed to start execution')
     }
-  }, [currentSkill, prompt, selectedModel, selectedProvider, handleEvent, handleError, handleComplete])
+  }, [
+    currentSkill,
+    prompt,
+    selectedModel,
+    selectedProvider,
+    debugMode,
+    handleEvent,
+    handleError,
+    handleComplete,
+  ])
 
   const cancelCurrentExecution = useCallback(async () => {
     if (!sessionId) return
@@ -179,9 +222,11 @@ export function useSkillExecution(): UseSkillExecutionResult {
     selectedProvider,
     selectedModel,
     prompt,
+    debugMode,
     setPrompt,
     setSelectedProvider,
     setSelectedModel,
+    setDebugMode,
     startExecution,
     cancelCurrentExecution,
     clearLogs,

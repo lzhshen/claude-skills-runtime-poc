@@ -10,6 +10,7 @@ from ..models import SkillFile, SkillPackage
 from ..services.skill_service import get_skill_service
 from ..utils.config import get_settings
 from ..utils.errors import BinaryFileError, FileTooLargeError, InvalidRequestError, NotFoundError
+from ..utils.file_tree import build_file_tree
 from ..utils.zip_repacker import repack_skill_zip
 
 router = APIRouter(prefix="/skills", tags=["skills"])
@@ -106,63 +107,28 @@ async def get_file_tree(skill_id: str) -> FileTreeResponse:
     if not package:
         raise NotFoundError("技能包", skill_id).to_http_exception()
 
-    # Build tree structure
-    def build_tree(files: list[SkillFile]) -> list[FileTreeNode]:
-        # Group files by directory
-        tree: dict[str, FileTreeNode] = {}
-        root_files: list[FileTreeNode] = []
+    # Build tree structure using utility function
+    tree_nodes = build_file_tree(package.files)
 
-        for file in files:
-            parts = file.path.split("/")
+    # Convert utility class FileTreeNode to Pydantic model FileTreeNode
+    def convert_node(node) -> FileTreeNode:
+        children = None
+        if node.children:
+            children = [convert_node(child) for child in node.children]
 
-            if len(parts) == 1:
-                # Root level file
-                root_files.append(
-                    FileTreeNode(
-                        path=file.path,
-                        name=file.name,
-                        file_type=file.file_type.value,
-                        size_bytes=file.size_bytes,
-                        is_binary=file.is_binary,
-                        is_modified=file.is_modified,
-                        children=None,
-                    )
-                )
-            else:
-                # File in subdirectory - add to appropriate directory node
-                dir_path = "/".join(parts[:-1])
+        return FileTreeNode(
+            path=node.path,
+            name=node.name,
+            file_type=node.file_type.value if hasattr(node.file_type, "value") else node.file_type,
+            size_bytes=node.size_bytes,
+            is_binary=node.is_binary,
+            is_modified=node.is_modified,
+            children=children,
+        )
 
-                if dir_path not in tree:
-                    tree[dir_path] = FileTreeNode(
-                        path=dir_path,
-                        name=parts[-2] if len(parts) > 1 else dir_path,
-                        file_type="directory",
-                        children=[],
-                    )
+    response_tree = [convert_node(node) for node in tree_nodes]
 
-                tree[dir_path].children.append(
-                    FileTreeNode(
-                        path=file.path,
-                        name=file.name,
-                        file_type=file.file_type.value,
-                        size_bytes=file.size_bytes,
-                        is_binary=file.is_binary,
-                        is_modified=file.is_modified,
-                        children=None,
-                    )
-                )
-
-        # Add directories to root
-        for dir_node in tree.values():
-            # Only add top-level directories
-            if "/" not in dir_node.path:
-                root_files.append(dir_node)
-
-        return sorted(root_files, key=lambda x: (x.file_type != "directory", x.name))
-
-    tree = build_tree(package.files)
-
-    return FileTreeResponse(tree=tree)
+    return FileTreeResponse(tree=response_tree)
 
 
 @router.get("/{skill_id}/files/{file_path:path}", response_model=SkillFile)

@@ -31,6 +31,25 @@ from ..models.log_content import (
     ToolResultLogContent,
 )
 from ..opencode import OpencodeClient
+
+
+# Internal protocol event types that should be filtered out for normal users
+# These are OpenCode WebSocket protocol messages, not user-visible content
+INTERNAL_EVENT_TYPES: frozenset[str] = frozenset(
+    {
+        "server.connected",
+        "server.heartbeat",
+        "session.created",
+        "session.updated",
+        "session.status",
+        "session.diff",
+        "session.idle",
+        "message.updated",
+        "message.part.updated",
+        "tui.toast.show",
+        "tui.toast.hide",
+    }
+)
 from ..utils.config import get_settings
 from .execution_storage import get_execution_storage
 from .skill_service import get_skill_service
@@ -177,31 +196,79 @@ class ExecutionService:
                         client.session.prompt(opencode_session.id, prompt)
                     )
 
-                    # Process events from queue
-                    while True:
-                        event = await stream_queue.get()
+                    message_index_map: dict[str, int] = {}
+                    message_role_map: dict[str, str] = {}
+                    session_idle = False
+
+                    while not session_idle:
+                        try:
+                            event = await asyncio.wait_for(
+                                stream_queue.get(),
+                                timeout=30.0,
+                            )
+                        except asyncio.TimeoutError:
+                            continue
+
                         if event is None:
                             break
 
-                        # Convert SSEEvent data (first parse json)
-                        event_data = event.json()
+                        try:
+                            event_data = event.json()
+                        except json.JSONDecodeError:
+                            continue
                         if not event_data:
                             continue
 
-                        # Add log entry for each event
-                        log = self._event_to_log(event_data, session_id)
-                        if log:
-                            session = storage.get(session_id)
-                            if session:
-                                session.logs.append(log)
-                                storage.save(session)
+                        event_type = event_data.get("type", "")
+                        properties = event_data.get("properties", {})
 
-                        # Check if completion or error occurred in event stream?
-                        # Or wait for prompt_task?
-                        # OpenCode events usually include status.
+                        if event_type == "session.idle":
+                            session_idle = True
+                        elif event_type == "session.status":
+                            status = properties.get("status", {})
+                            if status.get("type") == "idle":
+                                session_idle = True
 
-                    # Wait for prompt task to ensure it finished cleanly
-                    await prompt_task
+                        if event_type in ["message.updated", "message.part.updated"]:
+                            if event_type == "message.updated":
+                                msg_info = properties.get("info", {})
+                                message_id = msg_info.get("id", "")
+                                role = msg_info.get("role", "assistant")
+                                if message_id:
+                                    message_role_map[message_id] = role
+                            else:
+                                part_info = properties.get("part", {})
+                                message_id = part_info.get("messageID", "")
+                                role = message_role_map.get(message_id, "assistant")
+
+                            log = self._event_to_log(
+                                event_data, session_id, include_internal=True, role=role
+                            )
+                            if log:
+                                session = storage.get(session_id)
+                                if session:
+                                    if message_id and message_id in message_index_map:
+                                        idx = message_index_map[message_id]
+                                        if idx < len(session.logs):
+                                            session.logs[idx] = log
+                                    else:
+                                        if message_id:
+                                            message_index_map[message_id] = len(session.logs)
+                                        session.logs.append(log)
+                                    storage.save(session)
+
+                        elif event_type not in ["session.idle", "session.status"]:
+                            log = self._event_to_log(event_data, session_id, include_internal=False)
+                            if log:
+                                session = storage.get(session_id)
+                                if session:
+                                    session.logs.append(log)
+                                    storage.save(session)
+
+                    try:
+                        await asyncio.wait_for(prompt_task, timeout=5.0)
+                    except asyncio.TimeoutError:
+                        pass
 
                     # Mark as completed
                     session = storage.get(session_id)
@@ -249,32 +316,61 @@ class ExecutionService:
             # Remove from active sessions
             self._active_sessions.pop(session_id, None)
 
-    def _event_to_log(self, event: dict, session_id: str) -> Optional[ExecutionLog]:
-        """Convert an opencode event to an execution log entry."""
+    def _is_internal_event(self, event_type: str) -> bool:
+        """Check if an event type is an internal protocol message."""
+        return event_type in INTERNAL_EVENT_TYPES
+
+    def _is_system_log_internal(self, log: ExecutionLog) -> bool:
+        """Check if a SYSTEM log contains internal protocol data."""
+        if log.log_type != LogType.SYSTEM:
+            return False
+        content = log.content
+        if hasattr(content, "text"):
+            try:
+                event_data = json.loads(content.text)
+                event_type = event_data.get("type", "")
+                return self._is_internal_event(event_type)
+            except (json.JSONDecodeError, AttributeError):
+                pass
+        return False
+
+    def _event_to_log(
+        self,
+        event: dict,
+        session_id: str,
+        include_internal: bool = False,
+        role: str = "assistant",
+    ) -> Optional[ExecutionLog]:
+        """Convert an opencode event to an execution log entry.
+
+        Args:
+            event: The raw event data from OpenCode.
+            session_id: The execution session ID.
+            include_internal: If True, include internal protocol events as SYSTEM logs.
+            role: The message role (user/assistant) for message events.
+
+        Returns:
+            ExecutionLog if the event should be logged, None otherwise.
+        """
         event_type = event.get("type", "")
         properties = event.get("properties", {})
         timestamp = datetime.now(timezone.utc)
 
-        # Handle message updates (including deltas)
         if event_type in ["message.updated", "message.part.updated"]:
             content = ""
-            role = "assistant"
 
-            # Check properties -> part -> (text or content)
+            info = properties.get("info", {})
             part = properties.get("part", {})
+
             if "text" in part:
                 content = part["text"]
             elif "content" in part:
                 content = part["content"]
 
-            # If no content in part, check properties -> info -> content (message.updated)
-            if not content:
-                info = properties.get("info", {})
-                if "content" in info:
-                    content = info["content"]
+            if not content and "content" in info:
+                content = info["content"]
 
-            # If we found content, log it as a message
-            if content:
+            if content and content.strip():
                 return ExecutionLog(
                     session_id=session_id,
                     timestamp=timestamp,
@@ -286,6 +382,9 @@ class ExecutionService:
                         )
                     ),
                 )
+            # No content extracted from message event - skip it
+            # (don't fall through to SYSTEM log creation)
+            return None
 
         elif event_type == "tool_call":
             return ExecutionLog(
@@ -326,9 +425,10 @@ class ExecutionService:
                 ),
             )
 
-        # Capture strictly known event types as SYSTEM logs for debugging/visibility
-        # Only log significant events to avoid noise, or log everything if needed.
-        # For now, log everything to pass verification.
+        if self._is_internal_event(event_type):
+            if not include_internal:
+                return None
+
         return ExecutionLog(
             session_id=session_id,
             timestamp=timestamp,
@@ -391,23 +491,26 @@ class ExecutionService:
     async def stream_logs(
         self,
         session_id: str,
+        include_debug: bool = False,
     ) -> AsyncGenerator[ExecutionLog, None]:
-        """Stream execution logs for a session.
-
-        This yields logs as they are added to the session.
-        """
+        """Stream execution logs for a session."""
         storage = get_execution_storage()
-        last_index = 0
+        sent_logs: dict[int, str] = {}
 
         while True:
             session = storage.get(session_id)
             if not session:
                 break
 
-            # Yield any new logs
-            while last_index < len(session.logs):
-                yield session.logs[last_index]
-                last_index += 1
+            for idx, log in enumerate(session.logs):
+                if not include_debug and log.log_type == LogType.SYSTEM:
+                    if self._is_system_log_internal(log):
+                        continue
+
+                log_hash = self._log_content_hash(log)
+                if idx not in sent_logs or sent_logs[idx] != log_hash:
+                    sent_logs[idx] = log_hash
+                    yield log
 
             # Check if session is complete
             if session.status in (
@@ -419,6 +522,16 @@ class ExecutionService:
 
             # Wait a bit before checking for more logs
             await asyncio.sleep(0.1)
+
+    def _log_content_hash(self, log: ExecutionLog) -> str:
+        """Generate a hash of log content for change detection."""
+        if log.log_type == LogType.MESSAGE:
+            content = log.content
+            if hasattr(content, "message"):
+                msg = content.message
+                if hasattr(msg, "content"):
+                    return f"msg:{msg.role}:{msg.content}"
+        return f"{log.log_type}:{log.timestamp.isoformat()}"
 
 
 # Global instance

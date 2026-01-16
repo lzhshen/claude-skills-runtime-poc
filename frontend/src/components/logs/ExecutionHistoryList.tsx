@@ -11,15 +11,15 @@ interface ExecutionHistoryListProps {
 function getStatusColor(status: string): string {
   switch (status) {
     case 'completed':
-      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+      return 'bg-anthropic-green/10 text-anthropic-green dark:bg-green-900/30 dark:text-green-300'
     case 'failed':
       return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
     case 'running':
-      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+      return 'bg-anthropic-blue/10 text-anthropic-blue dark:bg-yellow-900/30 dark:text-yellow-300'
     case 'cancelled':
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+      return 'bg-anthropic-midgray/20 text-anthropic-midgray dark:bg-gray-700 dark:text-gray-300'
     default:
-      return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+      return 'bg-anthropic-stone/30 text-anthropic-charcoal/80 dark:bg-gray-700 dark:text-gray-300'
   }
 }
 
@@ -51,13 +51,8 @@ export function ExecutionHistoryList({
 
   if (sessions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-48 text-gray-500 dark:text-gray-400">
-        <svg
-          className="h-12 w-12 mb-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+      <div className="flex flex-col items-center justify-center h-48 text-anthropic-midgray dark:text-gray-400">
+        <svg className="h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -65,8 +60,8 @@ export function ExecutionHistoryList({
             d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
           />
         </svg>
-        <p className="text-sm">No executions yet</p>
-        <p className="text-xs mt-1">Run the skill to see execution history</p>
+        <p className="text-sm font-body">No executions yet</p>
+        <p className="text-xs mt-1 font-body">Run the skill to see execution history</p>
       </div>
     )
   }
@@ -80,19 +75,21 @@ export function ExecutionHistoryList({
           className={clsx(
             'w-full text-left p-3 rounded-lg border transition-colors',
             selectedId === session.id
-              ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-              : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+              ? 'border-anthropic-terracotta bg-anthropic-stone/30 dark:bg-primary-900/20'
+              : 'border-anthropic-stone/50 dark:border-gray-700 hover:bg-anthropic-stone/20 dark:hover:bg-gray-800'
           )}
         >
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-mono text-gray-500 dark:text-gray-400">
+            <span className="text-xs font-mono text-anthropic-charcoal/60 dark:text-gray-400">
               {session.id.slice(0, 8)}...
             </span>
-            <span className={clsx('px-2 py-0.5 text-xs rounded-full', getStatusColor(session.status))}>
+            <span
+              className={clsx('px-2 py-0.5 text-xs font-heading font-medium rounded-full', getStatusColor(session.status))}
+            >
               {session.status}
             </span>
           </div>
-          <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-between text-xs font-body text-anthropic-charcoal/70 dark:text-gray-400">
             <span>{new Date(session.started_at).toLocaleString()}</span>
             <span>{formatDuration(session.started_at, session.ended_at)}</span>
           </div>

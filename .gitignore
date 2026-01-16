@@ -66,6 +66,7 @@ pnpm-debug.log*
 dist/
 build/
 *.log
+*.tsbuildinfo
 
 # Temporary files
 *.tmp

@@ -29,9 +29,9 @@ export function PromptInput({
         disabled={disabled}
         placeholder={placeholder}
         rows={4}
-        className="w-full px-4 py-3 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full px-4 py-3 text-sm font-body border border-anthropic-stone dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-anthropic-charcoal dark:text-gray-100 placeholder-anthropic-midgray dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-anthropic-terracotta focus:border-transparent resize-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       />
-      <div className="absolute bottom-2 right-2 text-xs text-gray-400 dark:text-gray-500">
+      <div className="absolute bottom-2 right-2 text-xs font-body text-anthropic-midgray dark:text-gray-500">
         Press ⌘+Enter to run
       </div>
     </div>

@@ -18,17 +18,17 @@ export function EditorToolbar({
   isDownloading = false,
 }: EditorToolbarProps) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+    <div className="flex items-center justify-between px-4 py-3 bg-white dark:bg-gray-800 border-b border-anthropic-stone/50 dark:border-gray-700">
       <div className="flex items-center gap-3">
         {/* Save button */}
         <button
           onClick={onSave}
           disabled={!hasChanges || isSaving}
           className={clsx(
-            'inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+            'inline-flex items-center gap-2 px-3 py-1.5 text-sm font-heading font-medium rounded-md transition-colors',
             hasChanges && !isSaving
-              ? 'bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'
-              : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed'
+              ? 'bg-anthropic-terracotta text-white hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-anthropic-terracotta'
+              : 'bg-anthropic-stone/30 text-anthropic-midgray dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed'
           )}
         >
           {isSaving ? (
@@ -70,10 +70,10 @@ export function EditorToolbar({
           onClick={onRevert}
           disabled={!hasChanges || isSaving}
           className={clsx(
-            'inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+            'inline-flex items-center gap-2 px-3 py-1.5 text-sm font-heading font-medium rounded-md transition-colors',
             hasChanges && !isSaving
-              ? 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
-              : 'bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed'
+              ? 'bg-white dark:bg-gray-700 text-anthropic-charcoal dark:text-gray-200 border border-anthropic-stone dark:border-gray-600 hover:bg-anthropic-stone/20 dark:hover:bg-gray-600'
+              : 'bg-anthropic-stone/30 text-anthropic-midgray dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed'
           )}
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -89,9 +89,7 @@ export function EditorToolbar({
 
         {/* Unsaved changes indicator */}
         {hasChanges && (
-          <span className="text-sm text-yellow-600 dark:text-yellow-400">
-            • Unsaved changes
-          </span>
+          <span className="text-sm font-body text-anthropic-terracotta dark:text-yellow-400">• Unsaved changes</span>
         )}
       </div>
 
@@ -99,7 +97,7 @@ export function EditorToolbar({
       <button
         onClick={onDownload}
         disabled={isDownloading}
-        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-heading font-medium bg-anthropic-green text-white rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-anthropic-green transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isDownloading ? (
           <>

@@ -15,16 +15,17 @@ export function ValidationResult({ status, errors }: ValidationResultProps) {
     <div
       className={clsx(
         'rounded-lg p-4',
-        isValid && 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800',
+        isValid && 'bg-anthropic-green/10 dark:bg-green-900/20 border border-anthropic-green/30 dark:border-green-800',
         isInvalid && 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800',
-        isPending && 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800'
+        isPending &&
+          'bg-anthropic-cream dark:bg-yellow-900/20 border border-anthropic-stone dark:border-yellow-800'
       )}
     >
       <div className="flex items-center gap-2">
         {isValid && (
           <>
             <svg
-              className="h-5 w-5 text-green-500"
+              className="h-5 w-5 text-anthropic-green"
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 20 20"
               fill="currentColor"
@@ -35,7 +36,7 @@ export function ValidationResult({ status, errors }: ValidationResultProps) {
                 clipRule="evenodd"
               />
             </svg>
-            <span className="font-medium text-green-800 dark:text-green-200">
+            <span className="font-heading font-medium text-anthropic-green dark:text-green-200">
               Validation Passed
             </span>
           </>
@@ -55,14 +56,14 @@ export function ValidationResult({ status, errors }: ValidationResultProps) {
                 clipRule="evenodd"
               />
             </svg>
-            <span className="font-medium text-red-800 dark:text-red-200">Validation Failed</span>
+            <span className="font-heading font-medium text-red-800 dark:text-red-200">Validation Failed</span>
           </>
         )}
 
         {isPending && (
           <>
             <svg
-              className="h-5 w-5 text-yellow-500 animate-spin"
+              className="h-5 w-5 text-anthropic-terracotta animate-spin"
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
@@ -81,7 +82,7 @@ export function ValidationResult({ status, errors }: ValidationResultProps) {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
               />
             </svg>
-            <span className="font-medium text-yellow-800 dark:text-yellow-200">Validating...</span>
+            <span className="font-heading font-medium text-anthropic-terracotta dark:text-yellow-200">Validating...</span>
           </>
         )}
       </div>
@@ -94,18 +95,18 @@ export function ValidationResult({ status, errors }: ValidationResultProps) {
               className="p-3 bg-white dark:bg-gray-800 rounded border border-red-100 dark:border-red-900"
             >
               <div className="flex items-start gap-2">
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-heading font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
                   {error.code}
                 </span>
                 {error.field && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-heading font-medium bg-anthropic-stone text-anthropic-charcoal dark:bg-gray-700 dark:text-gray-200">
                     {error.field}
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-sm text-gray-700 dark:text-gray-300">{error.message}</p>
+              <p className="mt-1 text-sm font-body text-anthropic-charcoal dark:text-gray-300">{error.message}</p>
               {error.suggestion && (
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-1 text-xs font-body text-anthropic-midgray dark:text-gray-400">
                   Suggestion: {error.suggestion}
                 </p>
               )}

@@ -51,6 +51,8 @@ class SessionAPI:
         if response.status_code >= 400:
             print(f"ERROR: prompt_async failed: {response.status_code} {response.text}")
         response.raise_for_status()
+        if response.status_code == 204 or not response.content:
+            return {}
         return response.json()
 
     async def abort(self, session_id: str) -> None:

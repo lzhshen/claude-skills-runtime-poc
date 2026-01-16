@@ -30,7 +30,9 @@ class FileTreeNode:
         result = {
             "path": self.path,
             "name": self.name,
-            "file_type": self.file_type.value if isinstance(self.file_type, FileType) else self.file_type,
+            "file_type": self.file_type.value
+            if isinstance(self.file_type, FileType)
+            else self.file_type,
         }
 
         if self.file_type != FileType.DIRECTORY:

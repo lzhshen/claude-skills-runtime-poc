@@ -28,15 +28,13 @@ export function ErrorDisplay({ error }: ErrorDisplayProps) {
           </svg>
         </div>
         <div className="flex-1">
-          <h3 className="text-sm font-medium text-red-800 dark:text-red-300">
+          <h3 className="text-sm font-heading font-medium text-red-800 dark:text-red-300">
             Error: {error.code}
           </h3>
-          <p className="mt-1 text-sm text-red-700 dark:text-red-400">
-            {error.message}
-          </p>
+          <p className="mt-1 text-sm font-body text-red-700 dark:text-red-400">{error.message}</p>
           {error.stack_trace && (
             <details className="mt-3">
-              <summary className="text-xs text-red-600 dark:text-red-400 cursor-pointer hover:underline">
+              <summary className="text-xs font-body text-red-600 dark:text-red-400 cursor-pointer hover:underline">
                 Show stack trace
               </summary>
               <pre className="mt-2 p-3 bg-red-100 dark:bg-red-900/30 rounded text-xs font-mono text-red-800 dark:text-red-300 overflow-auto max-h-48">
@@ -45,7 +43,7 @@ export function ErrorDisplay({ error }: ErrorDisplayProps) {
             </details>
           )}
           {error.occurred_at && (
-            <p className="mt-2 text-xs text-red-500 dark:text-red-500">
+            <p className="mt-2 text-xs font-mono text-red-500 dark:text-red-500">
               Occurred at: {new Date(error.occurred_at).toLocaleString()}
             </p>
           )}

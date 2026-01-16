@@ -53,13 +53,8 @@ export function FilePreview({ file, isLoading }: FilePreviewProps) {
 
   if (!file) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-        <svg
-          className="h-12 w-12 mb-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+      <div className="flex flex-col items-center justify-center h-64 text-anthropic-midgray dark:text-gray-400">
+        <svg className="h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -67,20 +62,15 @@ export function FilePreview({ file, isLoading }: FilePreviewProps) {
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
-        <p className="text-sm">Select a file to preview</p>
+        <p className="text-sm font-body">Select a file to preview</p>
       </div>
     )
   }
 
   if (file.is_binary) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-        <svg
-          className="h-12 w-12 mb-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+      <div className="flex flex-col items-center justify-center h-64 text-anthropic-midgray dark:text-gray-400">
+        <svg className="h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -88,8 +78,8 @@ export function FilePreview({ file, isLoading }: FilePreviewProps) {
             d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
           />
         </svg>
-        <p className="text-sm font-medium">Binary file - cannot preview</p>
-        <p className="text-xs mt-1">Size: {formatBytes(file.size_bytes)}</p>
+        <p className="text-sm font-heading font-medium">Binary file - cannot preview</p>
+        <p className="text-xs mt-1 font-mono">Size: {formatBytes(file.size_bytes)}</p>
       </div>
     )
   }
@@ -98,21 +88,21 @@ export function FilePreview({ file, isLoading }: FilePreviewProps) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between px-4 py-2 bg-anthropic-stone/30 dark:bg-gray-800 border-b border-anthropic-stone/50 dark:border-gray-700">
         <div className="flex items-center gap-2">
-          <span className="font-mono text-sm text-gray-700 dark:text-gray-300">{file.path}</span>
+          <span className="font-mono text-sm text-anthropic-charcoal dark:text-gray-300">{file.path}</span>
           {file.is_modified && (
-            <span className="px-1.5 py-0.5 text-xs bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300 rounded">
+            <span className="px-1.5 py-0.5 text-xs font-heading font-medium bg-anthropic-terracotta/10 text-anthropic-terracotta dark:bg-yellow-900/30 dark:text-yellow-300 rounded">
               Modified
             </span>
           )}
         </div>
-        <span className="text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-xs font-mono text-anthropic-midgray dark:text-gray-400">
           {formatBytes(file.size_bytes)}
         </span>
       </div>
       <div className="flex-1 overflow-auto">
-        <pre className="p-4 text-sm font-mono text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
+        <pre className="p-4 text-sm font-mono text-anthropic-charcoal dark:text-gray-200 whitespace-pre-wrap break-words">
           <code className={`language-${language}`}>{file.content || ''}</code>
         </pre>
       </div>

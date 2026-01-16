@@ -4,7 +4,7 @@ import os
 import shutil
 import tempfile
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from ..models import ErrorCode, SkillFile, SkillPackage, ValidationStatus
@@ -100,7 +100,7 @@ class SkillService:
             extracted_path=temp_dir,
             validation_status=ValidationStatus.PENDING,
             size_bytes=len(file_content),
-            uploaded_at=datetime.utcnow(),
+            uploaded_at=datetime.now(timezone.utc),
         )
 
         # Extract zip
@@ -111,7 +111,11 @@ class SkillService:
         )
 
         if not extract_result.success:
-            error_code = ErrorCode[extract_result.error_code] if extract_result.error_code in ErrorCode.__members__ else ErrorCode.INVALID_ZIP
+            error_code = (
+                ErrorCode[extract_result.error_code]
+                if extract_result.error_code in ErrorCode.__members__
+                else ErrorCode.INVALID_ZIP
+            )
             package.validation_status = ValidationStatus.INVALID
             package.validation_errors = [
                 ValidationErrorModel(

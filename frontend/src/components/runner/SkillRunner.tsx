@@ -14,9 +14,11 @@ export function SkillRunner() {
     selectedProvider,
     selectedModel,
     prompt,
+    debugMode,
     setPrompt,
     setSelectedProvider,
     setSelectedModel,
+    setDebugMode,
     startExecution,
     cancelCurrentExecution,
     clearLogs,
@@ -29,17 +31,27 @@ export function SkillRunner() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-          Run Skill
-        </h2>
-        {logs.length > 0 && status !== 'running' && (
-          <button
-            onClick={clearLogs}
-            className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
-          >
-            Clear logs
-          </button>
-        )}
+        <h2 className="text-lg font-heading font-medium text-anthropic-charcoal dark:text-white">Run Skill</h2>
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2 text-sm font-body text-anthropic-charcoal/60 dark:text-gray-400">
+            <input
+              type="checkbox"
+              checked={debugMode}
+              onChange={(e) => setDebugMode(e.target.checked)}
+              className="rounded border-anthropic-stone text-anthropic-terracotta focus:ring-anthropic-terracotta"
+              disabled={isRunning}
+            />
+            Debug mode
+          </label>
+          {logs.length > 0 && status !== 'running' && (
+            <button
+              onClick={clearLogs}
+              className="text-sm font-body text-anthropic-midgray hover:text-anthropic-charcoal dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+            >
+              Clear logs
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Model selector */}
@@ -68,7 +80,7 @@ export function SkillRunner() {
       </div>
 
       {/* Execution progress */}
-      <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+      <div className="border-t border-anthropic-stone/30 dark:border-gray-700 pt-6">
         <ExecutionProgress logs={logs} status={status} error={error} />
       </div>
     </div>

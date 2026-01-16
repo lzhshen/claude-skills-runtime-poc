@@ -2,13 +2,7 @@
  * API response types.
  */
 
-import type {
-  Agent,
-  ExecutionLog,
-  ExecutionSession,
-  Provider,
-  SkillFile,
-} from './models'
+import type { Agent, ExecutionLog, ExecutionSession, Provider, SkillFile } from './models'
 
 // Re-export SkillPackage for external use
 export type { SkillPackage } from './models'
@@ -44,7 +38,7 @@ export interface HealthResponse {
  */
 export interface FileTreeResponse {
   tree: SkillFile[]
-  files?: SkillFile[]  // Alias for compatibility
+  files?: SkillFile[] // Alias for compatibility
 }
 
 /**

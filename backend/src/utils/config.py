@@ -5,11 +5,13 @@ from functools import lru_cache
 from typing import Optional
 
 from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
+
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     # Server settings
     host: str = Field(default="0.0.0.0")
@@ -28,10 +30,6 @@ class Settings(BaseSettings):
 
     # CORS settings
     cors_origins: list[str] = Field(default=["http://localhost:5173", "http://127.0.0.1:5173"])
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
 
     @property
     def max_upload_size_bytes(self) -> int:

@@ -70,8 +70,8 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
       className={clsx(
         'relative border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors',
         isDragging
-          ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-          : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500',
+          ? 'border-anthropic-terracotta bg-anthropic-stone/30 dark:bg-anthropic-stone/10'
+          : 'border-anthropic-stone dark:border-gray-600 hover:border-anthropic-midgray dark:hover:border-gray-500',
         isUploading && 'pointer-events-none opacity-50'
       )}
       onDragOver={handleDragOver}
@@ -88,7 +88,7 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
         disabled={isUploading}
       />
 
-      <div className="mx-auto h-16 w-16 text-gray-400 dark:text-gray-500">
+      <div className="mx-auto h-16 w-16 text-anthropic-midgray dark:text-gray-500">
         {isUploading ? (
           <svg
             className="animate-spin"
@@ -127,21 +127,19 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
         )}
       </div>
 
-      <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">
+      <h3 className="mt-4 text-lg font-heading font-medium text-anthropic-charcoal dark:text-white">
         {isUploading ? 'Uploading...' : 'Upload Skill Package'}
       </h3>
 
-      <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-        {isDragging
-          ? 'Drop your .zip file here'
-          : 'Drag and drop a .zip file, or click to browse'}
+      <p className="mt-2 text-sm font-body text-anthropic-charcoal/60 dark:text-gray-400">
+        {isDragging ? 'Drop your .zip file here' : 'Drag and drop a .zip file, or click to browse'}
       </p>
 
-      <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Maximum file size: 10MB</p>
+      <p className="mt-1 text-xs font-body text-anthropic-midgray dark:text-gray-500">Maximum file size: 10MB</p>
 
       {error && (
         <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-md">
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p className="text-sm font-body text-red-600 dark:text-red-400">{error}</p>
         </div>
       )}
     </div>

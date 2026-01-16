@@ -71,7 +71,9 @@ function MainPage() {
 
   const handleReset = () => {
     if (hasChanges) {
-      const confirmed = window.confirm('You have unsaved changes. Are you sure you want to upload a new skill?')
+      const confirmed = window.confirm(
+        'You have unsaved changes. Are you sure you want to upload a new skill?'
+      )
       if (!confirmed) return
     }
     setCurrentSkill(null)
@@ -104,16 +106,16 @@ function MainPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <header className="bg-white dark:bg-gray-800 shadow">
+    <div className="min-h-screen bg-anthropic-cream dark:bg-anthropic-charcoal font-body text-anthropic-charcoal dark:text-anthropic-cream">
+      <header className="bg-white dark:bg-gray-800 shadow border-b border-anthropic-stone/50">
         <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-2xl font-heading font-semibold text-anthropic-charcoal dark:text-white">
             Claude Skills Runtime
           </h1>
           {currentSkill && (
             <button
               onClick={handleReset}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              className="px-4 py-2 text-sm font-heading font-medium text-anthropic-charcoal dark:text-gray-200 bg-white dark:bg-gray-700 border border-anthropic-stone dark:border-gray-600 rounded-md hover:bg-anthropic-stone/20 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-anthropic-terracotta transition-colors"
             >
               Upload New Skill
             </button>
@@ -144,23 +146,25 @@ function MainPage() {
             )}
 
             {/* Tab Navigation */}
-            <div className="border-b border-gray-200 dark:border-gray-700">
-              <nav className="-mb-px flex space-x-8">
+            <div className="border-b border-anthropic-stone dark:border-gray-700 overflow-x-auto">
+              <nav className="-mb-px flex space-x-8 min-w-max">
                 <button
                   onClick={() => setActiveTab('editor')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'editor'
-                      ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
+                  className={`py-2 px-1 border-b-2 font-heading font-medium text-sm transition-colors ${
+                    activeTab === 'editor'
+                      ? 'border-anthropic-terracotta text-anthropic-terracotta dark:text-primary-400'
+                      : 'border-transparent text-anthropic-charcoal/60 dark:text-gray-400 hover:text-anthropic-charcoal dark:hover:text-gray-300 hover:border-anthropic-stone dark:hover:border-gray-600'
+                  }`}
                 >
                   Editor
                 </button>
                 <button
                   onClick={() => setActiveTab('runner')}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'runner'
-                      ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
+                  className={`py-2 px-1 border-b-2 font-heading font-medium text-sm transition-colors ${
+                    activeTab === 'runner'
+                      ? 'border-anthropic-terracotta text-anthropic-terracotta dark:text-primary-400'
+                      : 'border-transparent text-anthropic-charcoal/60 dark:text-gray-400 hover:text-anthropic-charcoal dark:hover:text-gray-300 hover:border-anthropic-stone dark:hover:border-gray-600'
+                  }`}
                 >
                   Run Skill
                 </button>
@@ -169,10 +173,11 @@ function MainPage() {
                     setActiveTab('history')
                     loadSessions()
                   }}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'history'
-                      ? 'border-primary-500 text-primary-600 dark:text-primary-400'
-                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
+                  className={`py-2 px-1 border-b-2 font-heading font-medium text-sm transition-colors ${
+                    activeTab === 'history'
+                      ? 'border-anthropic-terracotta text-anthropic-terracotta dark:text-primary-400'
+                      : 'border-transparent text-anthropic-charcoal/60 dark:text-gray-400 hover:text-anthropic-charcoal dark:hover:text-gray-300 hover:border-anthropic-stone dark:hover:border-gray-600'
+                  }`}
                 >
                   History
                 </button>
@@ -204,13 +209,13 @@ function MainPage() {
                 {/* File Explorer and Editor Panel */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* File Tree */}
-                  <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                  <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden flex flex-col h-[400px] lg:h-[600px]">
+                    <div className="px-4 py-3 border-b border-anthropic-stone/30 dark:border-gray-700 shrink-0">
                       <h2 className="text-lg font-medium text-gray-900 dark:text-white">
                         File Explorer
                       </h2>
                     </div>
-                    <div className="p-4 max-h-[600px] overflow-auto">
+                    <div className="p-4 overflow-auto flex-1">
                       {fileTree ? (
                         <FileTree
                           files={fileTree.tree}
@@ -218,7 +223,7 @@ function MainPage() {
                           onSelect={selectFile}
                         />
                       ) : (
-                        <div className="flex items-center justify-center h-32">
+                        <div className="flex items-center justify-center h-full">
                           <div className="animate-spin h-6 w-6 border-2 border-primary-500 border-t-transparent rounded-full" />
                         </div>
                       )}
@@ -226,28 +231,28 @@ function MainPage() {
                   </div>
 
                   {/* Code Editor */}
-                  <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                      <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-                        Editor
-                      </h2>
+                  <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden flex flex-col h-[600px]">
+                    <div className="px-4 py-3 border-b border-anthropic-stone/30 dark:border-gray-700 flex items-center justify-between shrink-0">
+                      <h2 className="text-lg font-medium text-gray-900 dark:text-white">Editor</h2>
                       {hasChanges && (
                         <span className="text-sm text-yellow-600 dark:text-yellow-400">
                           • Unsaved changes
                         </span>
                       )}
                     </div>
-                    <div className="h-[600px] overflow-auto">
+                    <div className="flex-1 overflow-hidden relative">
                       {isFileLoading ? (
                         <div className="flex items-center justify-center h-full">
                           <div className="animate-spin h-8 w-8 border-4 border-primary-500 border-t-transparent rounded-full" />
                         </div>
                       ) : (
-                        <CodeEditor
-                          file={selectedFile}
-                          value={editedContent}
-                          onChange={setEditedContent}
-                        />
+                        <div className="absolute inset-0">
+                          <CodeEditor
+                            file={selectedFile}
+                            value={editedContent}
+                            onChange={setEditedContent}
+                          />
+                        </div>
                       )}
                     </div>
                   </div>
@@ -266,17 +271,15 @@ function MainPage() {
             {activeTab === 'history' && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Execution History List */}
-                <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                  <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                <div className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden flex flex-col h-[400px] lg:h-[600px]">
+                  <div className="px-4 py-3 border-b border-anthropic-stone/30 dark:border-gray-700 shrink-0">
                     <h2 className="text-lg font-medium text-gray-900 dark:text-white">
                       Execution History
                     </h2>
                   </div>
-                  <div className="p-4 max-h-[600px] overflow-auto">
+                  <div className="p-4 overflow-auto flex-1">
                     {logsError ? (
-                      <div className="p-4 text-red-600 dark:text-red-400 text-sm">
-                        {logsError}
-                      </div>
+                      <div className="p-4 text-red-600 dark:text-red-400 text-sm">{logsError}</div>
                     ) : (
                       <ExecutionHistoryList
                         sessions={sessions}
@@ -289,7 +292,7 @@ function MainPage() {
                 </div>
 
                 {/* Execution Detail Panel */}
-                <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+                <div className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden h-[600px]">
                   <ExecutionDetailPanel
                     session={selectedSession}
                     logs={executionLogs}

@@ -86,11 +86,8 @@ async def execute_skill(skill_id: str, body: ExecuteRequest) -> ExecuteResponse:
 
 
 @router.get("/{session_id}/stream")
-async def stream_execution(session_id: str) -> StreamingResponse:
-    """Stream execution logs as Server-Sent Events (SSE).
-
-    Returns a stream of SSE events containing execution logs.
-    """
+async def stream_execution(session_id: str, debug: bool = False) -> StreamingResponse:
+    """Stream execution logs as Server-Sent Events (SSE)."""
     service = get_execution_service()
     session = service.get_session(session_id)
 
@@ -98,9 +95,8 @@ async def stream_execution(session_id: str) -> StreamingResponse:
         raise NotFoundError("执行会话", session_id).to_http_exception()
 
     async def event_generator():
-        """Generate SSE events from execution logs."""
         try:
-            async for log in service.stream_logs(session_id):
+            async for log in service.stream_logs(session_id, include_debug=debug):
                 data = {
                     "timestamp": log.timestamp.isoformat(),
                     "type": log.log_type.value,

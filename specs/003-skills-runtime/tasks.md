@@ -102,7 +102,7 @@
 - [X] T040 [P] [US1] 在 `backend/tests/unit/test_zip_extractor.py` 中编写 zip 解压的单元测试
 - [X] T041 [P] [US1] 在 `backend/tests/unit/test_skill_validator.py` 中编写 SKILL.md 验证的单元测试
 - [X] T042 [P] [US1] 在 `backend/tests/unit/test_yaml_parser.py` 中编写 YAML frontmatter 解析的单元测试
-- [ ] T043 [P] [US1] 在 `frontend/tests/components/UploadZone.test.tsx` 中编写 UploadZone 的前端组件测试
+- [x] T043 [P] [US1] 在 `frontend/tests/components/UploadZone.test.tsx` 中编写 UploadZone 的前端组件测试
 
 ### 用户故事 1 的实现
 
@@ -134,10 +134,10 @@
 
 ### 用户故事 2 的测试 ⚠️
 
-- [ ] T059 [P] [US2] 在 `backend/tests/contract/test_file_tree.py` 中编写 GET /skills/{skill_id}/files 的契约测试
-- [ ] T060 [P] [US2] 在 `backend/tests/contract/test_file_content.py` 中编写 GET /skills/{skill_id}/files/{file_path} 的契约测试
-- [ ] T061 [P] [US2] 在 `frontend/tests/components/FileTree.test.tsx` 中编写 FileTree 的前端组件测试
-- [ ] T062 [P] [US2] 在 `frontend/tests/components/FilePreview.test.tsx` 中编写 FilePreview 的前端组件测试
+- [x] T059 [P] [US2] 在 `backend/tests/contract/test_file_tree.py` 中编写 GET /skills/{skill_id}/files 的契约测试
+- [x] T060 [P] [US2] 在 `backend/tests/contract/test_file_content.py` 中编写 GET /skills/{skill_id}/files/{file_path} 的契约测试
+- [x] T061 [P] [US2] 在 `frontend/tests/components/FileTree.test.tsx` 中编写 FileTree 的前端组件测试
+- [x] T062 [P] [US2] 在 `frontend/tests/components/FilePreview.test.tsx` 中编写 FilePreview 的前端组件测试
 
 ### 用户故事 2 的实现
 
@@ -163,10 +163,10 @@
 
 ### 用户故事 3 的测试 ⚠️
 
-- [ ] T072 [P] [US3] 在 `backend/tests/contract/test_file_update.py` 中编写 PUT /skills/{skill_id}/files/{file_path} 的契约测试
-- [ ] T073 [P] [US3] 在 `backend/tests/contract/test_repack.py` 中编写 POST /skills/{skill_id}/repack 的契约测试
-- [ ] T074 [P] [US3] 在 `backend/tests/contract/test_download.py` 中编写 GET /skills/{skill_id}/download 的契约测试
-- [ ] T075 [P] [US3] 在 `frontend/tests/components/CodeEditor.test.tsx` 中编写 CodeEditor 的前端组件测试
+- [x] T072 [P] [US3] 在 `backend/tests/contract/test_file_update.py` 中编写 PUT /skills/{skill_id}/files/{file_path} 的契约测试
+- [x] T073 [P] [US3] 在 `backend/tests/contract/test_repack.py` 中编写 POST /skills/{skill_id}/repack 的契约测试
+- [x] T074 [P] [US3] 在 `backend/tests/contract/test_download.py` 中编写 GET /skills/{skill_id}/download 的契约测试
+- [x] T075 [P] [US3] 在 `frontend/tests/components/CodeEditor.test.tsx` 中编写 CodeEditor 的前端组件测试
 
 ### 用户故事 3 的实现
 
@@ -194,12 +194,12 @@
 
 ### 用户故事 4 的测试 ⚠️
 
-- [ ] T087 [P] [US4] 在 `backend/tests/contract/test_execute.py` 中编写 POST /skills/{skill_id}/execute 的契约测试
-- [ ] T088 [P] [US4] 在 `backend/tests/contract/test_stream.py` 中编写 GET /executions/{session_id}/stream (SSE) 的契约测试
-- [ ] T089 [P] [US4] 在 `backend/tests/contract/test_cancel.py` 中编写 POST /executions/{session_id}/cancel 的契约测试
-- [ ] T090 [P] [US4] 在 `backend/tests/contract/test_providers.py` 中编写 GET /config/providers 的契约测试
-- [ ] T091 [P] [US4] 在 `backend/tests/unit/test_opencode_session.py` 中编写 opencode 客户端会话管理的单元测试
-- [ ] T092 [P] [US4] 在 `frontend/tests/components/SkillRunner.test.tsx` 中编写 SkillRunner 的前端组件测试
+- [x] T087 [P] [US4] 在 `backend/tests/contract/test_execute.py` 中编写 POST /skills/{skill_id}/execute 的契约测试
+- [x] T088 [P] [US4] 在 `backend/tests/contract/test_stream.py` 中编写 GET /executions/{session_id}/stream (SSE) 的契约测试
+- [x] T089 [P] [US4] 在 `backend/tests/contract/test_cancel.py` 中编写 POST /executions/{session_id}/cancel 的契约测试
+- [x] T090 [P] [US4] 在 `backend/tests/contract/test_providers.py` 中编写 GET /config/providers 的契约测试
+- [X] T091 [P] [US4] 在 `backend/tests/unit/test_opencode_session.py` 中编写 opencode 客户端会话管理的单元测试
+- [x] T092 [P] [US4] 在 `frontend/tests/components/SkillRunner.test.tsx` 中编写 SkillRunner 的前端组件测试
 
 ### 用户故事 4 的实现
 
@@ -232,10 +232,10 @@
 
 ### 用户故事 5 的测试 ⚠️
 
-- [ ] T109 [P] [US5] 在 `backend/tests/contract/test_execution_detail.py` 中编写 GET /executions/{session_id} 的契约测试
-- [ ] T110 [P] [US5] 在 `backend/tests/contract/test_logs.py` 中编写 GET /executions/{session_id}/logs 的契约测试
-- [ ] T111 [P] [US5] 在 `backend/tests/contract/test_execution_list.py` 中编写 GET /executions 的契约测试
-- [ ] T112 [P] [US5] 在 `frontend/tests/components/ExecutionLogs.test.tsx` 中编写 ExecutionLogs 的前端组件测试
+- [x] T109 [P] [US5] 在 `backend/tests/contract/test_execution_detail.py` 中编写 GET /executions/{session_id} 的契约测试
+- [x] T110 [P] [US5] 在 `backend/tests/contract/test_logs.py` 中编写 GET /executions/{session_id}/logs 的契约测试
+- [x] T111 [P] [US5] 在 `backend/tests/contract/test_execution_list.py` 中编写 GET /executions 的契约测试
+- [x] T112 [P] [US5] 在 `frontend/tests/components/ExecutionLogs.test.tsx` 中编写 ExecutionLogs 的前端组件测试
 
 ### 用户故事 5 的实现
 
@@ -258,17 +258,17 @@
 
 **目的**: 影响多个用户故事的改进
 
-- [ ] T123 [P] 在 `backend/src/api/` 中为所有 API 端点添加全面的错误处理
+- [x] T123 [P] 在 `backend/src/api/` 中为所有 API 端点添加全面的错误处理
 - [X] T124 [P] 在 `backend/src/main.py` 中添加请求日志中间件
 - [X] T125 [P] 在 `frontend/src/components/ErrorBoundary.tsx` 中添加前端错误边界
-- [ ] T126 [P] 在前端组件中添加加载状态和骨架屏
-- [ ] T127 [P] 在 `frontend/src/index.css` 中添加响应式设计调整
+- [X] T126 [P] 在前端组件中添加加载状态和骨架屏
+- [X] T127 [P] 在 `frontend/src/index.css` 中添加响应式设计调整
 - [X] T128 [P] 在 `backend/Dockerfile` 中创建后端 Docker 配置
 - [X] T129 [P] 在 `frontend/Dockerfile` 中创建前端 Docker 配置
 - [X] T130 创建用于开发环境的 docker-compose.yml
-- [ ] T131 运行 quickstart.md 验证 - 确认所有步骤都能正常工作
-- [ ] T132 [P] 在 `backend/tests/integration/` 中添加完整用户工作流的集成测试
-- [ ] T133 代码清理和最终重构
+- [x] T131 运行 quickstart.md 验证 - 确认所有步骤都能正常工作
+- [x] T132 [P] 在 `backend/tests/integration/` 中添加完整用户工作流的集成测试
+- [x] T133 代码清理和最终重构
 
 ---
 

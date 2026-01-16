@@ -130,4 +130,44 @@ specs/<feature>/
 4. **新组件**: 测试文件与组件同目录 (`Component.test.tsx`)
 
 <!-- MANUAL ADDITIONS START -->
+
+## Playwright MCP 使用指南
+
+使用 Playwright MCP 进行浏览器自动化测试时的注意事项。
+
+### 禁止操作
+
+| 操作 | 原因 |
+|------|------|
+| `pkill -f "playwright"` | 会杀死 MCP 服务进程，导致连接永久断开 |
+| `pkill -f "chrome"` / `pkill -f "chromium"` | 同上，破坏 MCP 连接链路 |
+| `browser_wait_for` 等待超过 5 秒 | 可能导致页面状态丢失或超时 |
+
+### 正确的等待方式
+
+```javascript
+// ❌ 错误：长时间等待
+browser_wait_for({time: 10})
+
+// ✅ 正确：短间隔轮询 + 状态检查
+browser_wait_for({time: 2})
+browser_snapshot()  // 检查当前状态
+// 根据状态决定是否继续等待
+```
+
+### 错误恢复策略
+
+| 错误信息 | 正确处理方式 |
+|----------|--------------|
+| "No open pages available" | 使用 `browser_tabs({action: "list"})` 检查，然后 `browser_tabs({action: "new"})` 创建新页面 |
+| "Browser is already in use" | 等待 3-5 秒后重试，**不要杀进程** |
+| "Not connected" | MCP 服务已断开，需要重启 opencode 服务 |
+
+### 最佳实践
+
+1. **短间隔轮询**：使用 2-3 秒的等待间隔，配合 `browser_snapshot()` 检查状态
+2. **状态检查优先**：操作前用 `browser_snapshot()` 确认页面状态
+3. **使用 Playwright API 管理浏览器**：用 `browser_tabs`, `browser_close` 等 API，不要用系统命令
+4. **异步操作处理**：对于长时间运行的操作（如 skill 执行），使用轮询检查完成状态而非阻塞等待
+
 <!-- MANUAL ADDITIONS END -->

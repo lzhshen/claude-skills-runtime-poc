@@ -47,7 +47,6 @@ def create_app() -> FastAPI:
         description="Runtime framework for testing Claude Skills",
         version="0.1.0",
         lifespan=lifespan,
-        json_encoders={datetime: lambda v: v.isoformat()},
     )
 
     # Configure CORS
@@ -88,6 +87,21 @@ def create_app() -> FastAPI:
         return JSONResponse(
             status_code=exc.status_code,
             content=exc.to_dict(),
+        )
+
+    # Add global error handler for unhandled exceptions
+    @app.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "error": {
+                    "code": "INTERNAL_ERROR",
+                    "message": "Internal server error",
+                    "details": str(exc) if settings.debug else None,
+                }
+            },
         )
 
     # Include API router

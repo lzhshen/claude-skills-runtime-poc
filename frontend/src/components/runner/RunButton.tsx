@@ -12,12 +12,12 @@ export function RunButton({ onClick, disabled = false, isRunning = false }: RunB
       onClick={onClick}
       disabled={disabled || isRunning}
       className={clsx(
-        'inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium rounded-lg transition-all',
+        'inline-flex items-center gap-2 px-6 py-2.5 text-sm font-heading font-medium rounded-lg transition-all',
         isRunning
-          ? 'bg-primary-400 text-white cursor-wait'
+          ? 'bg-anthropic-terracotta/80 text-white cursor-wait'
           : disabled
-            ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-            : 'bg-primary-600 text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 shadow-sm hover:shadow'
+            ? 'bg-anthropic-stone text-anthropic-midgray dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed'
+            : 'bg-anthropic-terracotta text-white hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-anthropic-terracotta shadow-sm hover:shadow'
       )}
     >
       {isRunning ? (

@@ -2,7 +2,8 @@
  * Base API service with fetch wrapper.
  */
 
-const API_BASE_URL = (import.meta as unknown as { env: Record<string, string> }).env.VITE_API_BASE_URL || '/api/v1'
+const API_BASE_URL =
+  (import.meta as unknown as { env: Record<string, string> }).env.VITE_API_BASE_URL || '/api/v1'
 
 export class ApiError extends Error {
   constructor(
@@ -33,7 +34,11 @@ async function handleResponse<T>(response: Response): Promise<T> {
         error
       )
     }
-    throw new ApiError('HTTP_ERROR', `HTTP ${response.status}: ${response.statusText}`, response.status)
+    throw new ApiError(
+      'HTTP_ERROR',
+      `HTTP ${response.status}: ${response.statusText}`,
+      response.status
+    )
   }
 
   if (response.status === 204) {
@@ -48,7 +53,10 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.blob() as Promise<T>
 }
 
-function buildUrl(endpoint: string, params?: Record<string, string | number | boolean | undefined>): string {
+function buildUrl(
+  endpoint: string,
+  params?: Record<string, string | number | boolean | undefined>
+): string {
   const url = new URL(`${API_BASE_URL}${endpoint}`, window.location.origin)
 
   if (params) {
@@ -69,7 +77,7 @@ export async function apiGet<T>(endpoint: string, options?: RequestOptions): Pro
   const response = await fetch(url, {
     method: 'GET',
     headers: {
-      'Accept': 'application/json',
+      Accept: 'application/json',
       ...fetchOptions.headers,
     },
     ...fetchOptions,
@@ -87,7 +95,7 @@ export async function apiPost<T>(
   const url = buildUrl(endpoint, params)
 
   const headers: HeadersInit = {
-    'Accept': 'application/json',
+    Accept: 'application/json',
     ...fetchOptions.headers,
   }
 
@@ -96,7 +104,7 @@ export async function apiPost<T>(
   if (body instanceof FormData) {
     requestBody = body
   } else if (body !== undefined) {
-    ;(headers as Record<string, string>)['Content-Type'] = 'application/json'
+    (headers as Record<string, string>)['Content-Type'] = 'application/json'
     requestBody = JSON.stringify(body)
   }
 
@@ -121,7 +129,7 @@ export async function apiPut<T>(
   const response = await fetch(url, {
     method: 'PUT',
     headers: {
-      'Accept': 'application/json',
+      Accept: 'application/json',
       'Content-Type': 'application/json',
       ...fetchOptions.headers,
     },
@@ -139,7 +147,7 @@ export async function apiDelete<T>(endpoint: string, options?: RequestOptions): 
   const response = await fetch(url, {
     method: 'DELETE',
     headers: {
-      'Accept': 'application/json',
+      Accept: 'application/json',
       ...fetchOptions.headers,
     },
     ...fetchOptions,

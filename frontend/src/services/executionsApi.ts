@@ -3,12 +3,7 @@
  */
 
 import { API_BASE_URL } from './api'
-import type {
-  ExecutionSession,
-  ExecutionLog,
-  Provider,
-  Agent,
-} from '@/types'
+import type { ExecutionSession, ExecutionLog, Provider, Agent } from '@/types'
 
 export interface ExecuteRequest {
   prompt: string
@@ -61,9 +56,13 @@ export function streamExecution(
   sessionId: string,
   onEvent: (event: StreamEvent) => void,
   onError: (error: Error) => void,
-  onComplete: () => void
+  onComplete: () => void,
+  debug: boolean = false
 ): () => void {
-  const eventSource = new EventSource(`${API_BASE_URL}/executions/${sessionId}/stream`)
+  const url = debug
+    ? `${API_BASE_URL}/executions/${sessionId}/stream?debug=true`
+    : `${API_BASE_URL}/executions/${sessionId}/stream`
+  const eventSource = new EventSource(url)
 
   eventSource.onmessage = (event) => {
     try {
@@ -139,9 +138,7 @@ export async function getExecutionLogs(
 /**
  * List execution sessions.
  */
-export async function listExecutions(
-  skillId?: string
-): Promise<{ sessions: ExecutionSession[] }> {
+export async function listExecutions(skillId?: string): Promise<{ sessions: ExecutionSession[] }> {
   const url = skillId
     ? `${API_BASE_URL}/executions?skill_id=${skillId}`
     : `${API_BASE_URL}/executions`

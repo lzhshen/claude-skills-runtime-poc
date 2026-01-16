@@ -28,12 +28,12 @@ function getFileIcon(fileType: string, isExpanded?: boolean): JSX.Element {
   // File icon based on type
   const iconColor =
     fileType === 'markdown'
-      ? 'text-blue-500'
+      ? 'text-anthropic-blue'
       : fileType === 'yaml'
-        ? 'text-yellow-500'
+        ? 'text-anthropic-terracotta'
         : fileType === 'binary'
-          ? 'text-gray-400'
-          : 'text-gray-500'
+          ? 'text-anthropic-midgray'
+          : 'text-anthropic-charcoal/60'
 
   return (
     <svg className={clsx('h-4 w-4', iconColor)} fill="currentColor" viewBox="0 0 20 20">
@@ -49,15 +49,16 @@ function getFileIcon(fileType: string, isExpanded?: boolean): JSX.Element {
 export function FileTree({ files, selectedPath, onSelect, level = 0 }: FileTreeProps) {
   return (
     <div className={clsx('space-y-0.5', level > 0 && 'ml-4')}>
-      {files && files.map((file) => (
-        <FileTreeNode
-          key={file.path}
-          file={file}
-          isSelected={selectedPath === file.path}
-          onSelect={onSelect}
-          level={level}
-        />
-      ))}
+      {files &&
+        files.map((file) => (
+          <FileTreeNode
+            key={file.path}
+            file={file}
+            isSelected={selectedPath === file.path}
+            onSelect={onSelect}
+            level={level}
+          />
+        ))}
     </div>
   )
 }
@@ -84,23 +85,23 @@ function FileTreeNode({ file, isSelected, onSelect, level }: FileTreeNodeProps) 
       <button
         onClick={handleClick}
         className={clsx(
-          'w-full flex items-center gap-2 px-2 py-1 rounded text-left text-sm transition-colors',
+          'w-full flex items-center gap-2 px-2 py-1 rounded text-left text-sm font-body transition-colors',
           isSelected
-            ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-            : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300',
-          isDirectory && 'font-medium'
+            ? 'bg-anthropic-stone/50 dark:bg-primary-900/30 text-anthropic-charcoal dark:text-primary-300'
+            : 'hover:bg-anthropic-stone/20 dark:hover:bg-gray-700 text-anthropic-charcoal dark:text-gray-300',
+          isDirectory && 'font-heading font-medium'
         )}
         disabled={isDirectory}
       >
-        <span className="flex-shrink-0 text-gray-400 dark:text-gray-500">
+        <span className="flex-shrink-0 text-anthropic-midgray dark:text-gray-500">
           {getFileIcon(file.file_type)}
         </span>
         <span className="truncate">{file.name}</span>
         {file.is_modified && (
-          <span className="flex-shrink-0 w-2 h-2 rounded-full bg-yellow-500" title="Modified" />
+          <span className="flex-shrink-0 w-2 h-2 rounded-full bg-anthropic-terracotta" title="Modified" />
         )}
         {file.is_binary && (
-          <span className="text-xs text-gray-400 dark:text-gray-500">(binary)</span>
+          <span className="text-xs text-anthropic-midgray dark:text-gray-500">(binary)</span>
         )}
       </button>
 

@@ -11,7 +11,12 @@ function getLogIcon(type: string): JSX.Element {
   switch (type) {
     case 'message':
       return (
-        <svg className="h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-4 w-4 text-anthropic-blue"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -22,7 +27,12 @@ function getLogIcon(type: string): JSX.Element {
       )
     case 'tool_call':
       return (
-        <svg className="h-4 w-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-4 w-4 text-anthropic-terracotta"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -39,7 +49,12 @@ function getLogIcon(type: string): JSX.Element {
       )
     case 'tool_result':
       return (
-        <svg className="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-4 w-4 text-anthropic-green"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -61,7 +76,12 @@ function getLogIcon(type: string): JSX.Element {
       )
     default:
       return (
-        <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-4 w-4 text-anthropic-midgray"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -74,28 +94,54 @@ function getLogIcon(type: string): JSX.Element {
 }
 
 function formatContent(content: Record<string, unknown>): string {
+  // Handle MessageLogContent: { type: "message", message: { role, content } }
+  if (content.message && typeof content.message === 'object') {
+    const message = content.message as Record<string, unknown>
+    if (typeof message.content === 'string') {
+      return message.content
+    }
+  }
+
+  // Handle ToolCallLogContent: { type: "tool_call", tool_call: { name, arguments } }
+  if (content.tool_call && typeof content.tool_call === 'object') {
+    const toolCall = content.tool_call as Record<string, unknown>
+    if (typeof toolCall.name === 'string') {
+      return `Tool: ${toolCall.name}`
+    }
+  }
+
+  // Handle ToolResultLogContent: { type: "tool_result", result: "..." }
+  if (content.result && typeof content.result === 'string') {
+    return content.result
+  }
+
+  // Handle ErrorLogContent: { type: "error", error: { code, message } }
+  if (content.error && typeof content.error === 'object') {
+    const error = content.error as Record<string, unknown>
+    if (typeof error.message === 'string') {
+      return `Error: ${error.message}`
+    }
+  }
+
+  // Handle SystemLogContent: { type: "system", text: "..." }
+  if (content.text && typeof content.text === 'string') {
+    return content.text
+  }
+
+  // Legacy/fallback: direct content field
   if (content.content && typeof content.content === 'string') {
     return content.content
   }
-  if (content.name && typeof content.name === 'string') {
-    return `Tool: ${content.name}`
-  }
-  if (content.result && typeof content.result === 'string') {
-    return content.result.slice(0, 200) + (content.result.length > 200 ? '...' : '')
-  }
-  return JSON.stringify(content, null, 2).slice(0, 200)
+
+  // Fallback to JSON (no truncation for debugging)
+  return JSON.stringify(content, null, 2)
 }
 
 export function ExecutionProgress({ logs, status, error }: ExecutionProgressProps) {
   if (status === 'idle' && logs.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-gray-500 dark:text-gray-400">
-        <svg
-          className="h-12 w-12 mb-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+      <div className="flex flex-col items-center justify-center h-64 text-anthropic-midgray dark:text-gray-400">
+        <svg className="h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -109,7 +155,7 @@ export function ExecutionProgress({ logs, status, error }: ExecutionProgressProp
             d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        <p className="text-sm">Enter a prompt and click Run to execute the skill</p>
+        <p className="text-sm font-body">Enter a prompt and click Run to execute the skill</p>
       </div>
     )
   }
@@ -117,31 +163,29 @@ export function ExecutionProgress({ logs, status, error }: ExecutionProgressProp
   return (
     <div className="space-y-3">
       {/* Status indicator */}
-      <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-lg">
+      <div className="flex items-center gap-2 px-3 py-2 bg-anthropic-stone/20 dark:bg-gray-800 rounded-lg">
         <div
           className={clsx(
             'w-2 h-2 rounded-full',
-            status === 'running' && 'bg-yellow-500 animate-pulse',
-            status === 'completed' && 'bg-green-500',
+            status === 'running' && 'bg-anthropic-terracotta animate-pulse',
+            status === 'completed' && 'bg-anthropic-green',
             status === 'failed' && 'bg-red-500',
-            status === 'cancelled' && 'bg-gray-500',
-            status === 'idle' && 'bg-gray-400'
+            status === 'cancelled' && 'bg-anthropic-midgray',
+            status === 'idle' && 'bg-anthropic-midgray'
           )}
         />
-        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
+        <span className="text-sm font-heading font-medium text-anthropic-charcoal dark:text-gray-300 capitalize">
           {status}
         </span>
         {status === 'running' && (
-          <span className="text-xs text-gray-500 dark:text-gray-400">
-            ({logs.length} events)
-          </span>
+          <span className="text-xs font-body text-anthropic-midgray dark:text-gray-400">({logs.length} events)</span>
         )}
       </div>
 
       {/* Error display */}
       {error && (
         <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+          <p className="text-sm font-body text-red-600 dark:text-red-400">{error}</p>
         </div>
       )}
 
@@ -150,19 +194,19 @@ export function ExecutionProgress({ logs, status, error }: ExecutionProgressProp
         {logs.map((log, index) => (
           <div
             key={index}
-            className="flex items-start gap-3 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg"
+            className="flex items-start gap-3 p-3 bg-white dark:bg-gray-800 border border-anthropic-stone/50 dark:border-gray-700 rounded-lg"
           >
             <div className="flex-shrink-0 mt-0.5">{getLogIcon(log.type)}</div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">
+                <span className="text-xs font-heading font-medium text-anthropic-charcoal/60 dark:text-gray-400 uppercase">
                   {log.type.replace('_', ' ')}
                 </span>
-                <span className="text-xs text-gray-400 dark:text-gray-500">
+                <span className="text-xs font-mono text-anthropic-midgray dark:text-gray-500">
                   {new Date(log.timestamp).toLocaleTimeString()}
                 </span>
               </div>
-              <pre className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words font-mono">
+              <pre className="text-sm font-body text-anthropic-charcoal dark:text-gray-300 whitespace-pre-wrap break-words font-mono">
                 {formatContent(log.content)}
               </pre>
             </div>
@@ -171,8 +215,8 @@ export function ExecutionProgress({ logs, status, error }: ExecutionProgressProp
 
         {/* Running indicator */}
         {status === 'running' && (
-          <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-            <svg className="animate-spin h-4 w-4 text-yellow-500" fill="none" viewBox="0 0 24 24">
+          <div className="flex items-center gap-2 p-3 bg-anthropic-cream dark:bg-yellow-900/20 border border-anthropic-terracotta/20 dark:border-yellow-800 rounded-lg">
+            <svg className="animate-spin h-4 w-4 text-anthropic-terracotta" fill="none" viewBox="0 0 24 24">
               <circle
                 className="opacity-25"
                 cx="12"
@@ -187,9 +231,7 @@ export function ExecutionProgress({ logs, status, error }: ExecutionProgressProp
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            <span className="text-sm text-yellow-700 dark:text-yellow-300">
-              Executing...
-            </span>
+            <span className="text-sm font-heading text-anthropic-charcoal dark:text-yellow-300">Executing...</span>
           </div>
         )}
       </div>

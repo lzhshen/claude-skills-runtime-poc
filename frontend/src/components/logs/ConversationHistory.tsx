@@ -8,13 +8,13 @@ interface ConversationHistoryProps {
 function getRoleColor(role: string): string {
   switch (role) {
     case 'user':
-      return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800'
+      return 'bg-anthropic-stone/20 dark:bg-blue-900/20 border-anthropic-stone dark:border-blue-800'
     case 'assistant':
-      return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+      return 'bg-anthropic-cream dark:bg-green-900/20 border-anthropic-stone/50 dark:border-green-800'
     case 'system':
-      return 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+      return 'bg-anthropic-stone/10 dark:bg-gray-800 border-anthropic-stone/30 dark:border-gray-700'
     default:
-      return 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+      return 'bg-anthropic-stone/10 dark:bg-gray-800 border-anthropic-stone/30 dark:border-gray-700'
   }
 }
 
@@ -22,7 +22,12 @@ function getRoleIcon(role: string): JSX.Element {
   switch (role) {
     case 'user':
       return (
-        <svg className="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-5 w-5 text-anthropic-charcoal"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -33,7 +38,12 @@ function getRoleIcon(role: string): JSX.Element {
       )
     case 'assistant':
       return (
-        <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-5 w-5 text-anthropic-terracotta"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -44,7 +54,12 @@ function getRoleIcon(role: string): JSX.Element {
       )
     default:
       return (
-        <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="h-5 w-5 text-anthropic-midgray"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -59,13 +74,8 @@ function getRoleIcon(role: string): JSX.Element {
 export function ConversationHistory({ messages }: ConversationHistoryProps) {
   if (messages.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-48 text-gray-500 dark:text-gray-400">
-        <svg
-          className="h-12 w-12 mb-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+      <div className="flex flex-col items-center justify-center h-48 text-anthropic-midgray dark:text-gray-400">
+        <svg className="h-12 w-12 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -73,7 +83,7 @@ export function ConversationHistory({ messages }: ConversationHistoryProps) {
             d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
           />
         </svg>
-        <p className="text-sm">No messages in this conversation</p>
+        <p className="text-sm font-body">No messages in this conversation</p>
       </div>
     )
   }
@@ -81,24 +91,18 @@ export function ConversationHistory({ messages }: ConversationHistoryProps) {
   return (
     <div className="space-y-4">
       {messages.map((message, index) => (
-        <div
-          key={index}
-          className={clsx(
-            'p-4 rounded-lg border',
-            getRoleColor(message.role)
-          )}
-        >
+        <div key={index} className={clsx('p-4 rounded-lg border', getRoleColor(message.role))}>
           <div className="flex items-center gap-2 mb-2">
             {getRoleIcon(message.role)}
-            <span className="text-sm font-medium capitalize text-gray-700 dark:text-gray-300">
+            <span className="text-sm font-heading font-medium capitalize text-anthropic-charcoal dark:text-gray-300">
               {message.role}
             </span>
-            <span className="text-xs text-gray-400 dark:text-gray-500">
+            <span className="text-xs font-mono text-anthropic-midgray dark:text-gray-500">
               {new Date(message.timestamp).toLocaleTimeString()}
             </span>
           </div>
           <div className="prose dark:prose-invert prose-sm max-w-none">
-            <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-mono">
+            <pre className="whitespace-pre-wrap text-sm text-anthropic-charcoal dark:text-gray-300 font-mono">
               {message.content}
             </pre>
           </div>

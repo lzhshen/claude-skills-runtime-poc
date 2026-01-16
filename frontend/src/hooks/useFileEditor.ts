@@ -42,11 +42,7 @@ export function useFileEditor(): UseFileEditorResult {
     setError(null)
 
     try {
-      const updatedFile = await updateFileContent(
-        currentSkill.id,
-        currentFile.path,
-        editedContent
-      )
+      const updatedFile = await updateFileContent(currentSkill.id, currentFile.path, editedContent)
 
       // Update original content to the new saved content
       setOriginalContent(updatedFile.content || editedContent)

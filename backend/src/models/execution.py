@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List, Any
-from datetime import datetime
 
 from pydantic import BaseModel, Field
 
@@ -17,9 +16,7 @@ class Message(BaseModel):
 
     role: MessageRole
     content: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
-
-    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class ToolCall(BaseModel):
@@ -30,10 +27,8 @@ class ToolCall(BaseModel):
     arguments: dict
     result: Optional[str] = None
     status: ToolCallStatus = ToolCallStatus.PENDING
-    started_at: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     ended_at: Optional[datetime] = None
-
-    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
 
 
 class ExecutionResult(BaseModel):
@@ -52,7 +47,7 @@ class ExecutionError(BaseModel):
     code: str
     message: str
     stack_trace: Optional[str] = None
-    occurred_at: datetime = Field(default_factory=datetime.utcnow)
+    occurred_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
 
@@ -62,8 +57,6 @@ class ModelConfig(BaseModel):
 
     provider_id: str
     model_id: str
-
-    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
 
 
 class ExecutionSession(BaseModel):
@@ -75,12 +68,10 @@ class ExecutionSession(BaseModel):
     user_prompt: str
     model: Optional[ModelConfig] = None
     status: ExecutionStatus = ExecutionStatus.PENDING
-    started_at: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     ended_at: Optional[datetime] = None
     duration_ms: Optional[int] = None
     result: Optional[ExecutionResult] = None
     error: Optional[ExecutionError] = None
     opencode_session_id: Optional[str] = None
     logs: List[ExecutionLog] = []
-
-    model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}

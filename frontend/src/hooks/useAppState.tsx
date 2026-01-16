@@ -53,9 +53,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const updateExecutionInHistory = useCallback((execution: ExecutionSession) => {
     setState((prev) => ({
       ...prev,
-      executionHistory: prev.executionHistory.map((e) =>
-        e.id === execution.id ? execution : e
-      ),
+      executionHistory: prev.executionHistory.map((e) => (e.id === execution.id ? execution : e)),
       currentExecution:
         prev.currentExecution?.id === execution.id ? execution : prev.currentExecution,
     }))
@@ -92,6 +90,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   return <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAppState(): AppStateContextValue {
   const context = useContext(AppStateContext)
   if (!context) {
