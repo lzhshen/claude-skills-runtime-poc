@@ -1,7 +1,7 @@
 """YAML frontmatter parser utility."""
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 import yaml
 
@@ -13,7 +13,7 @@ class FrontmatterResult:
     success: bool
     frontmatter: dict[str, Any]
     body: str
-    error: Optional[str] = None
+    error: str | None = None
 
 
 def parse_frontmatter(content: str) -> FrontmatterResult:

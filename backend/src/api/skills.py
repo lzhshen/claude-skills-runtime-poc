@@ -1,8 +1,7 @@
 """Skills API endpoints."""
 
-from typing import Optional
 
-from fastapi import APIRouter, File, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
 from fastapi.responses import Response
 from pydantic import BaseModel
 
@@ -28,10 +27,10 @@ class FileTreeNode(BaseModel):
     path: str
     name: str
     file_type: str
-    size_bytes: Optional[int] = None
-    is_binary: Optional[bool] = None
-    is_modified: Optional[bool] = None
-    children: Optional[list["FileTreeNode"]] = None
+    size_bytes: int | None = None
+    is_binary: bool | None = None
+    is_modified: bool | None = None
+    children: list["FileTreeNode"] | None = None
 
 
 class FileTreeResponse(BaseModel):

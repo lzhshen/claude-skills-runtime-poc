@@ -2,17 +2,17 @@
 
 import logging
 import time
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .api import router as api_router
-from .opencode import OpencodeClient
 from .utils.config import get_settings
 from .utils.errors import AppError
+from .utils.opencode import close_opencode_client, get_opencode_client
 
 # Configure logging
 logging.basicConfig(
@@ -25,22 +25,17 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager."""
-    settings = get_settings()
-
-    # Initialize opencode client
-    app.state.opencode_client = OpencodeClient(settings.opencode_server_url)
+    app.state.opencode_client = get_opencode_client()
 
     yield
 
-    # Cleanup
-    await app.state.opencode_client.close()
+    await close_opencode_client()
 
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     settings = get_settings()
 
-    from datetime import datetime
 
     app = FastAPI(
         title="Claude Skills Runtime",

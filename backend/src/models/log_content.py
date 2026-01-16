@@ -1,6 +1,5 @@
 """Log content models."""
 
-from datetime import datetime
 from typing import Literal, Union
 
 from pydantic import BaseModel

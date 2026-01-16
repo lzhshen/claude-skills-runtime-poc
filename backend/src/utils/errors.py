@@ -1,6 +1,6 @@
 """Error handling utilities and exception classes."""
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import HTTPException, status
 
@@ -13,7 +13,7 @@ class AppError(Exception):
         code: str,
         message: str,
         status_code: int = status.HTTP_400_BAD_REQUEST,
-        details: Optional[dict[str, Any]] = None,
+        details: dict[str, Any] | None = None,
     ):
         self.code = code
         self.message = message
@@ -54,7 +54,7 @@ class NotFoundError(AppError):
 class ValidationError(AppError):
     """Validation error."""
 
-    def __init__(self, message: str, field: Optional[str] = None):
+    def __init__(self, message: str, field: str | None = None):
         super().__init__(
             code="VALIDATION_ERROR",
             message=message,

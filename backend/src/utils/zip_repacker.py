@@ -2,14 +2,13 @@
 
 import io
 import zipfile
-from typing import Dict
 
 from ..models import SkillFile
 
 
 def repack_skill_zip(
     files: list[SkillFile],
-    modified_contents: Dict[str, str],
+    modified_contents: dict[str, str],
 ) -> bytes:
     """Repack skill files into a new zip archive.
 

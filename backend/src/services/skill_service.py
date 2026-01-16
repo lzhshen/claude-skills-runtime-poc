@@ -2,10 +2,8 @@
 
 import os
 import shutil
-import tempfile
 import uuid
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from ..models import ErrorCode, SkillFile, SkillPackage, ValidationStatus
 from ..models import ValidationError as ValidationErrorModel
@@ -100,7 +98,7 @@ class SkillService:
             extracted_path=temp_dir,
             validation_status=ValidationStatus.PENDING,
             size_bytes=len(file_content),
-            uploaded_at=datetime.now(timezone.utc),
+            uploaded_at=datetime.now(UTC),
         )
 
         # Extract zip
@@ -150,7 +148,7 @@ class SkillService:
 
         # Read and validate SKILL.md
         skill_md_path = os.path.join(skill_root, "SKILL.md")
-        with open(skill_md_path, "r", encoding="utf-8") as f:
+        with open(skill_md_path, encoding="utf-8") as f:
             skill_md_content = f.read()
 
         validation_result = validate_skill_md(skill_md_content)
@@ -165,7 +163,7 @@ class SkillService:
         self.storage.save(package)
         return package
 
-    def get_package(self, package_id: str) -> Optional[SkillPackage]:
+    def get_package(self, package_id: str) -> SkillPackage | None:
         """Get a skill package by ID.
 
         Args:
@@ -195,7 +193,7 @@ class SkillService:
             return self.storage.delete(package_id)
         return False
 
-    def get_file_content(self, package_id: str, file_path: str) -> Optional[SkillFile]:
+    def get_file_content(self, package_id: str, file_path: str) -> SkillFile | None:
         """Get file content from a package.
 
         Args:
@@ -223,7 +221,7 @@ class SkillService:
 
     def update_file_content(
         self, package_id: str, file_path: str, content: str
-    ) -> Optional[SkillFile]:
+    ) -> SkillFile | None:
         """Update file content in a package.
 
         Args:
@@ -264,7 +262,7 @@ class SkillService:
 
 
 # Global service instance
-_service: Optional[SkillService] = None
+_service: SkillService | None = None
 
 
 def get_skill_service() -> SkillService:

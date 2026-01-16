@@ -2,10 +2,8 @@
 
 import hashlib
 import os
-from typing import Optional
 
 from ..models import FileType
-
 
 # Binary file signatures (magic bytes)
 BINARY_SIGNATURES = [
@@ -70,7 +68,7 @@ TEXT_EXTENSIONS = {
 }
 
 
-def is_binary_file(file_path: str, content: Optional[bytes] = None) -> bool:
+def is_binary_file(file_path: str, content: bytes | None = None) -> bool:
     """Detect if a file is binary.
 
     Args:
@@ -160,7 +158,7 @@ def get_file_size(file_path: str) -> int:
     return os.path.getsize(file_path)
 
 
-def read_text_file(file_path: str, encoding: str = "utf-8") -> Optional[str]:
+def read_text_file(file_path: str, encoding: str = "utf-8") -> str | None:
     """Read text file content.
 
     Args:
@@ -174,7 +172,7 @@ def read_text_file(file_path: str, encoding: str = "utf-8") -> Optional[str]:
         return None
 
     try:
-        with open(file_path, "r", encoding=encoding) as f:
+        with open(file_path, encoding=encoding) as f:
             return f.read()
     except UnicodeDecodeError:
         return None

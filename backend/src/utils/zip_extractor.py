@@ -4,7 +4,6 @@ import os
 import zipfile
 from dataclasses import dataclass
 from io import BytesIO
-from typing import Optional
 
 
 @dataclass
@@ -12,9 +11,9 @@ class ExtractionResult:
     """Result of zip extraction."""
 
     success: bool
-    extracted_path: Optional[str] = None
-    error_code: Optional[str] = None
-    error_message: Optional[str] = None
+    extracted_path: str | None = None
+    error_code: str | None = None
+    error_message: str | None = None
     file_count: int = 0
     total_size: int = 0
 
@@ -77,7 +76,7 @@ def extract_zip(
                 return ExtractionResult(
                     success=False,
                     error_code="ZIP_BOMB",
-                    error_message=f"Suspicious compression ratio detected",
+                    error_message="Suspicious compression ratio detected",
                 )
 
             # Check for path traversal in all entries
@@ -140,7 +139,7 @@ def extract_zip(
         )
 
 
-def find_skill_root(extracted_dir: str) -> Optional[str]:
+def find_skill_root(extracted_dir: str) -> str | None:
     """Find the root directory containing SKILL.md.
 
     Handles cases where:

@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
-from typing import Optional, List, Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
 from .enums import ExecutionStatus, MessageRole, ToolCallStatus
+
+if TYPE_CHECKING:
+    from .execution_log import ExecutionLog
 
 
 class Message(BaseModel):
@@ -16,7 +19,7 @@ class Message(BaseModel):
 
     role: MessageRole
     content: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
 class ToolCall(BaseModel):
@@ -25,10 +28,10 @@ class ToolCall(BaseModel):
     id: str
     name: str
     arguments: dict
-    result: Optional[str] = None
+    result: str | None = None
     status: ToolCallStatus = ToolCallStatus.PENDING
-    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    ended_at: Optional[datetime] = None
+    started_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    ended_at: datetime | None = None
 
 
 class ExecutionResult(BaseModel):
@@ -46,8 +49,8 @@ class ExecutionError(BaseModel):
 
     code: str
     message: str
-    stack_trace: Optional[str] = None
-    occurred_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    stack_trace: str | None = None
+    occurred_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     model_config = {"json_encoders": {datetime: lambda v: v.isoformat()}}
 
@@ -66,12 +69,12 @@ class ExecutionSession(BaseModel):
     skill_package_id: str
     skill_name: str
     user_prompt: str
-    model: Optional[ModelConfig] = None
+    model: ModelConfig | None = None
     status: ExecutionStatus = ExecutionStatus.PENDING
-    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    ended_at: Optional[datetime] = None
-    duration_ms: Optional[int] = None
-    result: Optional[ExecutionResult] = None
-    error: Optional[ExecutionError] = None
-    opencode_session_id: Optional[str] = None
-    logs: List[ExecutionLog] = []
+    started_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    ended_at: datetime | None = None
+    duration_ms: int | None = None
+    result: ExecutionResult | None = None
+    error: ExecutionError | None = None
+    opencode_session_id: str | None = None
+    logs: list[ExecutionLog] = []

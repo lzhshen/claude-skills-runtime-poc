@@ -2,15 +2,14 @@
 
 import json
 from datetime import datetime
-from typing import Optional
 
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from ..models import ExecutionSession, ExecutionStatus, ModelConfig
+from ..models import ExecutionSession, ModelConfig
 from ..services.execution_service import get_execution_service
-from ..utils.errors import NotFoundError, InvalidRequestError
+from ..utils.errors import InvalidRequestError, NotFoundError
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -29,8 +28,8 @@ class ExecuteRequest(BaseModel):
     """Request body for skill execution."""
 
     prompt: str
-    model: Optional[str] = None
-    provider: Optional[str] = None
+    model: str | None = None
+    provider: str | None = None
 
 
 class ExecuteResponse(BaseModel):
@@ -194,7 +193,7 @@ async def get_execution_logs(session_id: str) -> dict:
 
 
 @router.get("")
-async def list_executions(skill_id: Optional[str] = None) -> dict:
+async def list_executions(skill_id: str | None = None) -> dict:
     """List all execution sessions."""
     service = get_execution_service()
     sessions = service.list_sessions(skill_id)

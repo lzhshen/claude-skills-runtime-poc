@@ -1,7 +1,7 @@
 """Execution log model."""
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 
@@ -14,6 +14,6 @@ class ExecutionLog(BaseModel):
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     session_id: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     log_type: LogType
     content: LogContent

@@ -2,11 +2,16 @@
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
 [project]
 name = "claude-skills-runtime"
 version = "0.1.0"
 description = "Claude Skills runtime framework and testing web application"
-readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
 authors = [
@@ -21,6 +26,7 @@ dependencies = [
     "aiohttp>=3.9.0",
     "httpx>=0.26.0",
     "sse-starlette>=1.8.0",
+    "opencode-sdk-new @ git+ssh://git@github.com/lzhshen/opencode-sdk-new.git@d58fd94",
 ]
 
 [project.optional-dependencies]
@@ -40,6 +46,9 @@ testpaths = ["tests"]
 asyncio_mode = "auto"
 pythonpath = ["src"]
 addopts = "-v --cov=src --cov-report=term-missing"
+markers = [
+    "e2e: end-to-end tests requiring running OpenCode server (deselect with '-m \"not e2e\"')",
+]
 
 [tool.ruff]
 target-version = "py311"

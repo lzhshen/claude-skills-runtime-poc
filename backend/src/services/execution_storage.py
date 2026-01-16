@@ -1,6 +1,5 @@
 """Execution session storage service."""
 
-from typing import Optional
 from datetime import datetime
 
 from ..models import ExecutionSession, ExecutionStatus
@@ -16,11 +15,11 @@ class ExecutionStorage:
         """Save an execution session."""
         self._sessions[session.id] = session
 
-    def get(self, session_id: str) -> Optional[ExecutionSession]:
+    def get(self, session_id: str) -> ExecutionSession | None:
         """Get an execution session by ID."""
         return self._sessions.get(session_id)
 
-    def list_all(self, skill_id: Optional[str] = None) -> list[ExecutionSession]:
+    def list_all(self, skill_id: str | None = None) -> list[ExecutionSession]:
         """List all execution sessions, optionally filtered by skill ID."""
         sessions = list(self._sessions.values())
 
@@ -36,8 +35,8 @@ class ExecutionStorage:
         self,
         session_id: str,
         status: ExecutionStatus,
-        ended_at: Optional[datetime] = None,
-    ) -> Optional[ExecutionSession]:
+        ended_at: datetime | None = None,
+    ) -> ExecutionSession | None:
         """Update status of an execution session."""
         session = self._sessions.get(session_id)
         if session:
@@ -60,7 +59,7 @@ class ExecutionStorage:
 
 
 # Global instance
-_execution_storage: Optional[ExecutionStorage] = None
+_execution_storage: ExecutionStorage | None = None
 
 
 def get_execution_storage() -> ExecutionStorage:

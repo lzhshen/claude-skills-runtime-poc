@@ -1,6 +1,5 @@
 """Skill file model."""
 
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -14,7 +13,7 @@ class SkillFile(BaseModel):
     name: str
     file_type: FileType
     size_bytes: int
-    content: Optional[str] = None
+    content: str | None = None
     is_modified: bool = False
     original_hash: str
     is_binary: bool = False

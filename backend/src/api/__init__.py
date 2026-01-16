@@ -2,10 +2,10 @@
 
 from fastapi import APIRouter
 
+from .config import router as config_router
+from .executions import router as executions_router
 from .health import router as health_router
 from .skills import router as skills_router
-from .executions import router as executions_router
-from .config import router as config_router
 
 router = APIRouter()
 

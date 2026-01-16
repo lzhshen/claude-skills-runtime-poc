@@ -1,8 +1,6 @@
 """Configuration management for the backend."""
 
-import os
 from functools import lru_cache
-from typing import Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict

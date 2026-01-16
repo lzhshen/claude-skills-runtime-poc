@@ -1,6 +1,5 @@
 """Validation error model."""
 
-from typing import Optional
 
 from pydantic import BaseModel
 
@@ -12,5 +11,5 @@ class ValidationError(BaseModel):
 
     code: ErrorCode
     message: str
-    suggestion: Optional[str] = None
-    field: Optional[str] = None
+    suggestion: str | None = None
+    field: str | None = None

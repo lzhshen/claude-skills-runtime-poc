@@ -2,7 +2,6 @@
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -21,6 +20,6 @@ class SkillPackage(BaseModel):
     validation_status: ValidationStatus = ValidationStatus.PENDING
     validation_errors: list[ValidationError] = []
     files: list[SkillFile] = []
-    metadata: Optional[SkillMetadata] = None
+    metadata: SkillMetadata | None = None
     uploaded_at: datetime = Field(default_factory=datetime.utcnow)
     size_bytes: int

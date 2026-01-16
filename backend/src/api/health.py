@@ -30,9 +30,9 @@ async def health_check(request: Request) -> HealthResponse:
     settings = get_settings()
     opencode_client = request.app.state.opencode_client
 
-    # Check opencode server health
     try:
-        is_healthy = await opencode_client.is_healthy()
+        health_response = await opencode_client.global_.retrieve_health()
+        is_healthy = health_response.status == "ok" if hasattr(health_response, "status") else True
         opencode_status = OpencodeServerStatus(
             status="connected" if is_healthy else "disconnected",
             url=settings.opencode_server_url,

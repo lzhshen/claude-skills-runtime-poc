@@ -1,6 +1,5 @@
 """In-memory skill package storage service."""
 
-from typing import Optional
 
 from ..models import SkillPackage
 
@@ -19,7 +18,7 @@ class SkillStorage:
         """
         self._packages[package.id] = package
 
-    def get(self, package_id: str) -> Optional[SkillPackage]:
+    def get(self, package_id: str) -> SkillPackage | None:
         """Get a skill package by ID.
 
         Args:
@@ -58,7 +57,7 @@ class SkillStorage:
 
 
 # Global storage instance
-_storage: Optional[SkillStorage] = None
+_storage: SkillStorage | None = None
 
 
 def get_skill_storage() -> SkillStorage:

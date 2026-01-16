@@ -1,7 +1,6 @@
 """SKILL.md validator service."""
 
 from dataclasses import dataclass
-from typing import Optional
 
 from ..models import ErrorCode, SkillMetadata
 from ..models import ValidationError as ValidationErrorModel
@@ -13,7 +12,7 @@ class ValidationResult:
     """Result of SKILL.md validation."""
 
     is_valid: bool
-    metadata: Optional[SkillMetadata] = None
+    metadata: SkillMetadata | None = None
     errors: list[ValidationErrorModel] = None
 
     def __post_init__(self):

@@ -1,6 +1,5 @@
 """File tree building utility."""
 
-from typing import Optional
 
 from ..models import FileType, SkillFile
 
@@ -13,9 +12,9 @@ class FileTreeNode:
         path: str,
         name: str,
         file_type: FileType,
-        size_bytes: Optional[int] = None,
-        is_binary: Optional[bool] = None,
-        is_modified: Optional[bool] = None,
+        size_bytes: int | None = None,
+        is_binary: bool | None = None,
+        is_modified: bool | None = None,
     ):
         self.path = path
         self.name = name
@@ -23,7 +22,7 @@ class FileTreeNode:
         self.size_bytes = size_bytes
         self.is_binary = is_binary
         self.is_modified = is_modified
-        self.children: list["FileTreeNode"] = []
+        self.children: list[FileTreeNode] = []
 
     def to_dict(self) -> dict:
         """Convert to dictionary for JSON serialization."""
