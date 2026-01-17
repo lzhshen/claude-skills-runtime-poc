@@ -59,6 +59,19 @@
 - [x] 9.2 运行完整测试套件（87 tests passed）
 - [x] 9.3 更新 pyproject.toml 添加 hatch 配置支持 Git URL 依赖
 
+## 10. Playwright E2E 验证 ✅ 已完成
+
+- [x] 10.1 启动后端服务器 (uvicorn port 8000)
+- [x] 10.2 启动前端服务器 (vite port 5173)
+- [x] 10.3 使用 Playwright MCP 进行浏览器自动化测试：
+  - 打开 http://localhost:5173
+  - 上传 brand-guidelines.zip 技能包
+  - 验证技能验证通过 (Validation Passed)
+  - 切换到 Run Skill 面板
+  - 输入测试 prompt
+  - 执行技能并确认状态为 "completed"
+- [x] 10.4 前端测试验证（31 tests passed）
+
 ## Git URL 依赖说明
 
 仓库地址：`git@github.com:lzhshen/opencode-sdk-new.git`

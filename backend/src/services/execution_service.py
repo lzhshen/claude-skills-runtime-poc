@@ -149,13 +149,47 @@ class ExecutionService:
 
                     message_role_map: dict[str, str] = {}
                     message_index_map: dict[str, int] = {}
+                    has_received_assistant_response = False
+                    events_received = 0
+                    debug_log = open("/tmp/skill_events.log", "w")
 
                     async for event in event_stream:
-                        if self._is_session_complete(event, opencode_session.id):
+                        events_received += 1
+                        event_type = getattr(event, "type", "unknown")
+                        debug_log.write(f"Event #{events_received}: {event_type}\n")
+
+                        if isinstance(event, EventMessageUpdated):
+                            msg_info = event.properties.info
+                            msg_id = msg_info.id
+                            role = getattr(msg_info, "role", "unknown")
+                            message_role_map[msg_id] = role
+                            debug_log.write(f"  Message {msg_id} role={role}\n")
+
+                        if isinstance(event, EventMessagePartUpdated):
+                            part = event.properties.part
+                            text = getattr(part, "text", None) or getattr(part, "content", None)
+                            msg_id = getattr(part, "message_id", "unknown")
+                            role = message_role_map.get(msg_id, "unknown")
+                            debug_log.write(
+                                f"  Part msg_id={msg_id} role={role} text={text[:50] if text else 'None'}...\n"
+                            )
+
+                            if role == "assistant" and text and text.strip():
+                                has_received_assistant_response = True
+                                debug_log.write(f"  -> Assistant response detected!\n")
+
+                        debug_log.flush()
+
+                        if has_received_assistant_response and self._is_session_complete(
+                            event, opencode_session.id
+                        ):
+                            debug_log.write(f"Session complete after {events_received} events\n")
+                            debug_log.close()
                             break
 
                         if self._is_session_error(event, opencode_session.id):
                             error_msg = self._extract_error_message(event)
+                            debug_log.close()
                             raise RuntimeError(f"Session error: {error_msg}")
 
                         log = self._typed_event_to_log(
@@ -226,6 +260,29 @@ class ExecutionService:
                 status = event.properties.status
                 if hasattr(status, "type") and status.type == "idle":
                     return True
+        return False
+
+    def _is_assistant_event(self, event: Event, session_id: str) -> bool:
+        """Check if event indicates assistant processing has started for this session."""
+        if isinstance(event, EventMessagePartUpdated):
+            part = event.properties.part
+            message_id = part.message_id if hasattr(part, "message_id") else ""
+            # Check if this is for our session by checking parent session
+            if hasattr(part, "session_id") and part.session_id != session_id:
+                return False
+            # Any message part update with content indicates processing
+            if hasattr(part, "text") and part.text:
+                return True
+            if hasattr(part, "content") and part.content:
+                return True
+        if isinstance(event, EventMessageUpdated):
+            msg_info = event.properties.info
+            if hasattr(msg_info, "session_id") and msg_info.session_id != session_id:
+                return False
+            # Assistant message created
+            role = getattr(msg_info, "role", None)
+            if role == "assistant":
+                return True
         return False
 
     def _is_session_error(self, event: Event, session_id: str) -> bool:
