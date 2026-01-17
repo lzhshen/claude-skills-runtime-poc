@@ -1,0 +1,4 @@
+# Ralph Progress Log
+# Feature: migrate-to-typescript-fullstack
+# Started: 2026-01-17
+

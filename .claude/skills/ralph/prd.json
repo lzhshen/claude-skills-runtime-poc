@@ -1,0 +1,537 @@
+{
+  "project": "Claude Skills Runtime POC",
+  "branchName": "ralph/migrate-to-typescript-fullstack",
+  "description": "Migrate from Python FastAPI backend to TypeScript Hono backend with pnpm monorepo structure",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Initialize pnpm monorepo at project root",
+      "description": "As a developer, I need pnpm monorepo infrastructure to share code between frontend and backend.",
+      "acceptanceCriteria": [
+        "Run pnpm init at project root",
+        "Create pnpm-workspace.yaml with packages/* configuration",
+        "Create tsconfig.base.json with shared TypeScript settings (target ES2022, strict mode)",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Create packages/shared package with extracted types",
+      "description": "As a developer, I need shared types package so frontend and backend can share type definitions.",
+      "acceptanceCriteria": [
+        "Create packages/shared/ directory structure with src/types/ and src/schemas/",
+        "Create package.json for @skills-runtime/shared",
+        "Extract SkillMetadata, SkillPackageInfo, ExecutionStatus types from frontend",
+        "Create Zod schemas matching the extracted types",
+        "Export types and schemas from package index",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Move frontend to packages/frontend",
+      "description": "As a developer, I need frontend in monorepo structure for unified dependency management.",
+      "acceptanceCriteria": [
+        "Move frontend/ directory to packages/frontend/",
+        "Update package.json name to @skills-runtime/frontend",
+        "Update imports to use @skills-runtime/shared for shared types",
+        "Update vite.config.ts if needed for new paths",
+        "pnpm install succeeds at root",
+        "Frontend builds successfully with pnpm run build",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Create packages/backend skeleton with Hono",
+      "description": "As a developer, I need TypeScript backend skeleton to start implementing APIs.",
+      "acceptanceCriteria": [
+        "Create packages/backend/ directory structure",
+        "Create package.json for @skills-runtime/backend with hono, zod, @hono/zod-validator dependencies",
+        "Create src/index.ts with basic Hono app setup and health endpoint",
+        "Add tsx for development and tsup for building",
+        "Backend starts with pnpm run dev on port 3001",
+        "GET /api/v1/health returns {status: 'ok'}",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Port YAML parser utility",
+      "description": "As a developer, I need YAML frontmatter parsing for SKILL.md file processing.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/utils/yaml-parser.ts",
+        "Implement parseFrontmatter function to extract YAML frontmatter from markdown",
+        "Handle edge cases: no frontmatter, invalid YAML, empty content",
+        "Add js-yaml dependency",
+        "Write unit tests in packages/backend/src/utils/yaml-parser.test.ts",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Port file utilities",
+      "description": "As a developer, I need file operation utilities for reading/writing skill files.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/utils/file-utils.ts",
+        "Implement async file read/write operations using fs/promises",
+        "Implement directory creation and listing utilities",
+        "Write unit tests in packages/backend/src/utils/file-utils.test.ts",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Port zip extractor utility",
+      "description": "As a developer, I need zip extraction with security checks for uploaded skill packages.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/utils/zip-extractor.ts",
+        "Add JSZip dependency",
+        "Implement extractZip function with path traversal protection",
+        "Implement zipslip security check (reject paths with .. or absolute paths)",
+        "Write unit tests with testdata/skills/valid/* and invalid/* packages",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Port zip repacker utility",
+      "description": "As a developer, I need to repack skill directories into downloadable zip files.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/utils/zip-repacker.ts",
+        "Implement repackZip function to create zip from directory",
+        "Preserve relative paths within zip",
+        "Write unit tests",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Port file tree utility",
+      "description": "As a developer, I need file tree generation for displaying skill package contents.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/utils/file-tree.ts",
+        "Implement buildFileTree function returning hierarchical structure",
+        "Return FileTreeNode[] with name, path, type (file/directory), children",
+        "Write unit tests",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Port error types and config",
+      "description": "As a developer, I need standardized error types and configuration for the backend.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/utils/errors.ts with custom error classes",
+        "Create SkillValidationError, SkillNotFoundError, ExecutionError classes",
+        "Create packages/backend/src/utils/config.ts with configuration settings",
+        "Configuration includes: port, host, cors origins, storage paths",
+        "Support environment variable overrides",
+        "Typecheck passes"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Create skill storage service",
+      "description": "As a developer, I need in-memory skill storage for managing uploaded skills.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/services/skill-storage.ts",
+        "Implement SkillStorage class with CRUD operations",
+        "Store skill metadata, extracted files, and zip data",
+        "Generate unique IDs for each skill",
+        "Write unit tests",
+        "Typecheck passes"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Create skill validator service",
+      "description": "As a developer, I need SKILL.md validation to ensure uploaded packages are valid.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/services/skill-validator.ts",
+        "Validate SKILL.md exists in package",
+        "Validate YAML frontmatter has required name and description fields",
+        "Return structured validation errors",
+        "Test with testdata/skills/invalid/* packages",
+        "Typecheck passes"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Create skill service with business logic",
+      "description": "As a developer, I need skill service to coordinate upload, validation, and storage.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/services/skill-service.ts",
+        "Implement uploadSkill: extract zip, validate, store",
+        "Implement getSkill, deleteSkill, getFileTree, getFileContent, updateFile",
+        "Implement repackSkill and downloadSkill",
+        "Write unit tests",
+        "Typecheck passes"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Implement skill upload endpoint",
+      "description": "As a user, I want to upload skill zip files through the API.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/routes/skills.ts",
+        "Implement POST /api/v1/skills/upload accepting multipart form data",
+        "Parse file field from form data",
+        "Return skill ID and metadata on success",
+        "Return 400 with validation errors on invalid package",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Implement skill CRUD endpoints",
+      "description": "As a user, I want to get and delete skills through the API.",
+      "acceptanceCriteria": [
+        "Implement GET /api/v1/skills/:id returning skill details",
+        "Implement DELETE /api/v1/skills/:id removing skill from storage",
+        "Return 404 for non-existent skill IDs",
+        "Typecheck passes"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Implement skill file endpoints",
+      "description": "As a user, I want to browse and edit skill files through the API.",
+      "acceptanceCriteria": [
+        "Implement GET /api/v1/skills/:id/files returning file tree",
+        "Implement GET /api/v1/skills/:id/files/* returning file content",
+        "Implement PUT /api/v1/skills/:id/files/* updating file content",
+        "Return appropriate content-type headers",
+        "Typecheck passes"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Implement skill repack and download endpoints",
+      "description": "As a user, I want to repack edited skills and download them as zip files.",
+      "acceptanceCriteria": [
+        "Implement POST /api/v1/skills/:id/repack triggering zip regeneration",
+        "Implement GET /api/v1/skills/:id/download returning zip file",
+        "Set Content-Disposition header for download",
+        "Typecheck passes"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Create execution storage service",
+      "description": "As a developer, I need in-memory execution storage for tracking running executions.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/services/execution-storage.ts",
+        "Implement ExecutionStorage class with CRUD operations",
+        "Store execution ID, skill ID, status, logs, timestamps",
+        "Support status transitions: pending -> running -> completed/failed/cancelled",
+        "Typecheck passes"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Create OpenCode client factory",
+      "description": "As a developer, I need OpenCode SDK client to communicate with opencode serve.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/services/opencode-client.ts",
+        "Add @opencode-ai/sdk dependency",
+        "Implement createClient function with configurable base URL",
+        "Implement session creation and message sending",
+        "Handle connection errors gracefully",
+        "Typecheck passes"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-020",
+      "title": "Create execution service with OpenCode integration",
+      "description": "As a developer, I need execution service to run skills via OpenCode.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/services/execution-service.ts",
+        "Implement startExecution: create session, send skill content as prompt",
+        "Process OpenCode events: message.part.updated, session.idle, etc.",
+        "Store logs from message events",
+        "Implement cancelExecution and getExecution",
+        "Typecheck passes"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-021",
+      "title": "Implement execution start endpoint",
+      "description": "As a user, I want to execute skills via the API.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/routes/executions.ts",
+        "Implement POST /api/v1/executions/skills/:id/execute",
+        "Accept optional prompt parameter in request body",
+        "Return execution ID immediately (async execution)",
+        "Typecheck passes"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-022",
+      "title": "Implement SSE log streaming endpoint",
+      "description": "As a user, I want to stream execution logs in real-time.",
+      "acceptanceCriteria": [
+        "Implement GET /api/v1/executions/:id/stream returning SSE stream",
+        "Use Hono streamSSE for SSE response",
+        "Send 'log' events with message content",
+        "Send 'status' events on status changes",
+        "Send 'complete' event when execution finishes",
+        "Match existing SSE format used by frontend",
+        "Typecheck passes"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-023",
+      "title": "Implement execution management endpoints",
+      "description": "As a user, I want to view and cancel executions.",
+      "acceptanceCriteria": [
+        "Implement POST /api/v1/executions/:id/cancel",
+        "Implement GET /api/v1/executions/:id returning execution details",
+        "Implement GET /api/v1/executions/:id/logs returning log array",
+        "Implement GET /api/v1/executions listing all executions",
+        "Typecheck passes"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-024",
+      "title": "Implement config and health endpoints",
+      "description": "As a user, I want to check system health and configuration.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/routes/config.ts",
+        "Enhance GET /api/v1/health to check OpenCode connectivity",
+        "Implement GET /api/v1/config/providers returning available providers",
+        "Implement GET /api/v1/config/agents returning available agents",
+        "Typecheck passes"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-025",
+      "title": "Add CORS and error handling middleware",
+      "description": "As a developer, I need proper middleware for frontend compatibility.",
+      "acceptanceCriteria": [
+        "Add CORS middleware allowing configured origins",
+        "Add global error handling middleware",
+        "Return consistent error response format: {error: string, details?: any}",
+        "Log errors to console for debugging",
+        "Typecheck passes"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-026",
+      "title": "Wire all routes into main app",
+      "description": "As a developer, I need all routes registered in the main Hono app.",
+      "acceptanceCriteria": [
+        "Update packages/backend/src/index.ts to import all route modules",
+        "Register skills, executions, config routes",
+        "Apply middleware (CORS, error handling)",
+        "Backend serves all endpoints on configured port",
+        "Typecheck passes"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-027",
+      "title": "Configure Vitest for backend testing",
+      "description": "As a developer, I need test infrastructure for the backend package.",
+      "acceptanceCriteria": [
+        "Add vitest and @vitest/coverage-v8 to backend dev dependencies",
+        "Create packages/backend/vitest.config.ts",
+        "Configure coverage threshold at 80%",
+        "Add test script to package.json",
+        "Verify pnpm run test works",
+        "Typecheck passes"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-028",
+      "title": "Write integration tests for skill endpoints",
+      "description": "As a developer, I need integration tests to verify skill API behavior.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/routes/skills.test.ts",
+        "Test upload with valid zip (testdata/skills/valid/brand-guidelines.zip)",
+        "Test upload with invalid zip (testdata/skills/invalid/missing-skill-md.zip)",
+        "Test get, delete, file operations",
+        "Test repack and download",
+        "Tests pass"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-029",
+      "title": "Write integration tests for execution endpoints",
+      "description": "As a developer, I need integration tests to verify execution API behavior.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/routes/executions.test.ts",
+        "Test start execution for uploaded skill",
+        "Test SSE stream format",
+        "Test cancel execution",
+        "Test list and get execution details",
+        "Tests pass (may require mocked OpenCode client)"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-030",
+      "title": "Create E2E test workflow",
+      "description": "As a developer, I need E2E test to verify complete user workflow.",
+      "acceptanceCriteria": [
+        "Create packages/backend/src/e2e/workflow.test.ts",
+        "Test complete flow: upload -> execute -> stream -> complete",
+        "Use real testdata skill package",
+        "Verify logs are received via SSE",
+        "Tests pass"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-031",
+      "title": "Validate frontend works with new backend",
+      "description": "As a developer, I need to verify frontend compatibility with TypeScript backend.",
+      "acceptanceCriteria": [
+        "Start backend on port 3001",
+        "Start frontend with API pointed to localhost:3001",
+        "Upload a skill package via UI",
+        "View skill details and file tree",
+        "Edit a file and save",
+        "Execute skill and view streaming logs",
+        "All operations complete successfully",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-032",
+      "title": "Delete Python backend directory",
+      "description": "As a developer, I need to remove the old Python backend code.",
+      "acceptanceCriteria": [
+        "Delete backend/ directory (Python code)",
+        "Delete requirements.txt if exists at root",
+        "Delete any Python-specific config files (pytest.ini, pyproject.toml)",
+        "Verify project still builds and tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 32,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-033",
+      "title": "Update CLAUDE.md with new project structure",
+      "description": "As a developer, I need updated documentation for the new monorepo structure.",
+      "acceptanceCriteria": [
+        "Update CLAUDE.md Project Structure section",
+        "Update Commands section with new pnpm commands",
+        "Remove Python-related commands",
+        "Add monorepo-specific instructions",
+        "Typecheck passes"
+      ],
+      "priority": 33,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-034",
+      "title": "Update docker-compose.yml for TypeScript backend",
+      "description": "As a developer, I need Docker setup for the new backend.",
+      "acceptanceCriteria": [
+        "Update docker-compose.yml backend service",
+        "Use Node.js base image instead of Python",
+        "Update build context to packages/backend",
+        "Create Dockerfile in packages/backend if needed",
+        "docker-compose up starts all services successfully",
+        "Typecheck passes"
+      ],
+      "priority": 34,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}
