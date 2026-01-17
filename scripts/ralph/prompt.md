@@ -20,7 +20,7 @@ You are an autonomous coding agent working on a software project.
 APPEND to progress.txt (never replace, always append):
 ```
 ## [Date/Time] - [Story ID]
-Thread: https://ampcode.com/threads/$AMP_CURRENT_THREAD_ID
+Iteration: [current iteration number]
 - What was implemented
 - Files changed
 - **Learnings for future iterations:**
@@ -30,7 +30,7 @@ Thread: https://ampcode.com/threads/$AMP_CURRENT_THREAD_ID
 ---
 ```
 
-Include the thread URL so future iterations can use the `read_thread` tool to reference previous work if needed.
+Include key learnings so future iterations can benefit from previous work.
 
 The learnings section is critical - it helps future iterations avoid repeating mistakes and understand the codebase better.
 
