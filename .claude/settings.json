@@ -29,8 +29,7 @@
       "Edit(*)",
       "MultiEdit(*)",
       "mcp__sequential-thinking__sequentialthinking",
-      "mcp__chrome-devtools__*",
-      "mcp__puppeteer__*",
+      "mcp__dev-browser__*",
       "mcp__context7__*",
       "Skill(*)"
     ],
@@ -40,8 +39,7 @@
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "context7",
-    "chrome-devtools",
-    "sequential-thinking",
-    "puppeteer"
+    "dev-browser",
+    "sequential-thinking"
   ]
 }

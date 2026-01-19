@@ -78,3 +78,5 @@ coverage/
 *.lcov
 
 ralph-loop.local.md
+
+.opencode-skills.pid

@@ -32,32 +32,36 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 ## 命令参考
 
 ```bash
-# 后端 (Python)
-cd backend && pytest                                     # 运行所有测试
-cd backend && pytest tests/unit/test_skill_validator.py # 运行单个测试文件
-cd backend && pytest -k "test_validate_valid"           # 按名称运行测试
-cd backend && pytest --no-cov                           # 跳过覆盖率
-cd backend && uvicorn src.main:app --reload             # 开发服务器 (端口 8000)
-cd backend && ruff check src tests                      # 代码检查
-cd backend && ruff check src tests --fix                # 代码检查 + 自动修复
-cd backend && black src tests                           # 代码格式化
-cd backend && mypy src                                  # 类型检查
+# ⭐ 一键启动所有服务 (推荐)
+pnpm dev                                                # 同时启动前端、后端、OpenCode (Skills)
+                                                        # Ctrl+C 优雅停止所有服务
 
-# 前端 (TypeScript/React)
-cd frontend && npm test                                 # 运行所有测试 (监听模式)
-cd frontend && npm test -- --run                        # 运行一次，不监听
-cd frontend && npm test -- WelcomeMessage               # 运行单个测试文件
-cd frontend && npm test -- -t "renders heading"         # 按名称运行测试
-cd frontend && npm run typecheck                        # 类型检查
-cd frontend && npm run lint                             # ESLint 检查
-cd frontend && npm run format                           # Prettier 格式化
-cd frontend && npm run dev                              # 开发服务器 (端口 5173)
-cd frontend && npm run build                            # 生产构建
+# 后端 (packages/backend)
+pnpm --filter @skills-runtime/backend dev               # 开发服务器 (端口 3001)
+pnpm --filter @skills-runtime/backend test              # 运行测试
+pnpm --filter @skills-runtime/backend typecheck         # 类型检查
 
-# opencode 服务
-opencode serve                                          # 基本启动 (port=4096)
-opencode serve --port 4096 --hostname 127.0.0.1 --cors http://localhost:5173  # 开发环境
+# 前端 (packages/frontend)
+pnpm --filter @skills-runtime/frontend dev              # 开发服务器 (端口 5173)
+pnpm --filter @skills-runtime/frontend test             # 运行测试 (监听模式)
+pnpm --filter @skills-runtime/frontend test -- --run    # 运行一次，不监听
+pnpm --filter @skills-runtime/frontend typecheck        # 类型检查
+pnpm --filter @skills-runtime/frontend lint             # ESLint 检查
+pnpm --filter @skills-runtime/frontend build            # 生产构建
+
+# opencode 服务 (Skills 执行引擎，端口 4097)
+# 注意：pnpm dev 已自动启动，通常无需手动运行
+opencode serve --port 4097 --hostname 127.0.0.1 --cors http://localhost:5173
 ```
+
+### 服务端口约定
+
+| 服务 | 端口 | 说明 |
+|------|------|------|
+| Frontend (Vite) | 5173 | React 开发服务器 |
+| Backend (Hono) | 3001 | API 服务器 |
+| OpenCode (Skills) | 4097 | Skills 执行引擎 |
+| OpenCode (AI Coding) | 4096 | AI 编码助手 (独立运行) |
 
 ## 项目结构
 

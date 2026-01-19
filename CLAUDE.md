@@ -19,36 +19,39 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 # claude-skills-runtime-poc Development Guidelines
 
-Auto-generated from all feature plans. Last updated: 2026-01-09
+Auto-generated from all feature plans. Last updated: 2026-01-18
 
 ## Active Technologies
 
-- Python 3.11+ (FastAPI backend)
-- TypeScript 5.x + React 18.x (frontend)
+- TypeScript 5.x (全栈)
+- Hono (后端 Web 框架)
+- React 18.x (前端)
 - TailwindCSS 3.x
-- Vite + Vitest (frontend build/test)
-- pytest + pytest-asyncio (backend test)
+- Zod (数据验证)
+- Vite + Vitest (构建/测试)
+- pnpm (monorepo 包管理)
 
 ## Project Structure
 
 ```text
-backend/                          # Python FastAPI 后端
-├── src/
-│   ├── models/                   # Pydantic 数据模型
-│   ├── services/                 # 业务逻辑
-│   ├── api/                      # FastAPI 路由
-│   ├── opencode/                 # opencode Python Client
-│   └── utils/                    # 工具函数
-└── tests/
-
-frontend/                         # React + TailwindCSS 前端
-├── src/
-│   ├── components/               # React 组件
-│   ├── pages/                    # 页面组件
-│   ├── services/                 # API 调用
-│   ├── hooks/                    # 自定义 hooks
-│   └── types/                    # TypeScript 类型
-└── tests/
+packages/                         # pnpm monorepo
+├── shared/                       # @skills-runtime/shared
+│   └── src/
+│       ├── types/                # TypeScript 类型定义
+│       └── schemas/              # Zod 验证 schemas
+├── backend/                      # @skills-runtime/backend (Hono)
+│   └── src/
+│       ├── routes/               # API 路由
+│       ├── services/             # 业务逻辑
+│       ├── utils/                # 工具函数
+│       └── __tests__/            # 单元测试
+└── frontend/                     # @skills-runtime/frontend (React)
+    └── src/
+        ├── components/           # React 组件
+        ├── pages/                # 页面组件
+        ├── services/             # API 调用
+        ├── hooks/                # 自定义 hooks
+        └── types/                # TypeScript 类型
 
 testdata/                         # 测试数据
 └── skills/
@@ -72,36 +75,39 @@ specs/003-skills-runtime/         # 功能规格文档
 ## Commands
 
 ```bash
-# 后端
-cd backend && uvicorn src.main:app --reload    # 启动后端服务
-cd backend && pytest                            # 运行后端测试
+# ⭐ 一键启动所有服务 (推荐)
+pnpm dev                                                # 同时启动前端、后端、OpenCode (Skills)
+                                                        # Ctrl+C 优雅停止所有服务
 
-# 前端
-cd frontend && npm run dev                      # 启动前端开发服务器
-cd frontend && npm run test                     # 运行前端测试
-cd frontend && npm run build                    # 构建前端
+# 后端 (packages/backend)
+pnpm --filter @skills-runtime/backend dev               # 开发服务器 (端口 3001)
+pnpm --filter @skills-runtime/backend test              # 运行测试
+pnpm --filter @skills-runtime/backend typecheck         # 类型检查
 
-# Docker
-docker-compose up                               # 启动所有服务
+# 前端 (packages/frontend)
+pnpm --filter @skills-runtime/frontend dev              # 开发服务器 (端口 5173)
+pnpm --filter @skills-runtime/frontend test             # 运行测试 (监听模式)
+pnpm --filter @skills-runtime/frontend test -- --run    # 运行一次，不监听
+pnpm --filter @skills-runtime/frontend typecheck        # 类型检查
+pnpm --filter @skills-runtime/frontend lint             # ESLint 检查
+pnpm --filter @skills-runtime/frontend build            # 生产构建
 
-# opencode 服务
-# 基本启动（默认: port=4096, hostname=127.0.0.1）
-opencode serve
-
-# 开发环境（允许前端访问）
-opencode serve --port 4096 --hostname 127.0.0.1 --cors http://localhost:5173
-
-# 选项说明:
-#   --port <number>     端口号（默认: 4096）
-#   --hostname <string> 主机名（默认: 127.0.0.1）
-#   --cors <origin>     允许的浏览器来源（可多次指定）
-#   --mdns              启用 mDNS 发现
-
+# opencode 服务 (Skills 执行引擎，端口 4097)
+# 注意：pnpm dev 已自动启动，通常无需手动运行
+opencode serve --port 4097 --hostname 127.0.0.1 --cors http://localhost:5173
 ```
+
+### 服务端口约定
+
+| 服务 | 端口 | 说明 |
+|------|------|------|
+| Frontend (Vite) | 5173 | React 开发服务器 |
+| Backend (Hono) | 3001 | API 服务器 |
+| OpenCode (Skills) | 4097 | Skills 执行引擎 |
+| OpenCode (AI Coding) | 4096 | AI 编码助手 (独立运行) |
 
 ## Code Style
 
-- Python: ruff, black, isort, mypy
 - TypeScript: ESLint, Prettier
 - Follow standard conventions
 
