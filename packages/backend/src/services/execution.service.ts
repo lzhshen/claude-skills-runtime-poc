@@ -99,84 +99,137 @@ export class ExecutionService {
       content: { text: 'Connecting to OpenCode server...' },
     });
 
-    // Create OpenCode session
-    const createResult = await this.openCodeClient.createSession();
-    if (createResult.error || !createResult.id) {
-      throw new Error(createResult.error || 'Failed to create OpenCode session');
-    }
-
-    const openCodeSessionId = createResult.id;
-
-    // Update session with OpenCode session ID
-    const session = this.storage.get(sessionId);
-    if (session) {
-      session.opencode_session_id = openCodeSessionId;
-      this.storage.save(session);
-    }
-
-    this.addLog(sessionId, {
-      timestamp: new Date().toISOString(),
-      type: 'system',
-      content: { text: `OpenCode session created: ${openCodeSessionId}` },
-    });
-
-    // Add log for sending message
-    this.addLog(sessionId, {
-      timestamp: new Date().toISOString(),
-      type: 'message',
-      content: {
-        message: { role: 'user', content: options.prompt },
-      },
-    });
-
-    // Send message to OpenCode
-    const messageResult = await this.openCodeClient.sendMessage(
-      openCodeSessionId,
-      options.prompt,
-      {
-        providerId: options.model?.provider_id,
-        modelId: options.model?.model_id,
+    try {
+      // Create OpenCode session
+      const createResult = await this.openCodeClient.session.create({});
+      if (createResult.error) {
+        const errorMessage = (createResult.error as any).message || String(createResult.error);
+        throw new Error(`Failed to create OpenCode session: ${errorMessage}`);
       }
-    );
 
-    if (!messageResult.success) {
-      throw new Error(messageResult.error || 'Failed to send message');
-    }
+      const openCodeSessionId = createResult.data.id;
 
-    // Add assistant response to logs
-    if (messageResult.response) {
+      // Update session with OpenCode session ID
+      const session = this.storage.get(sessionId);
+      if (session) {
+        session.opencode_session_id = openCodeSessionId;
+        this.storage.save(session);
+      }
+
+      this.addLog(sessionId, {
+        timestamp: new Date().toISOString(),
+        type: 'system',
+        content: { text: `OpenCode session created: ${openCodeSessionId}` },
+      });
+
+      // Start listening to events
+      // We start this before sending the prompt to capture all events
+      const eventStream = await this.openCodeClient.global.event();
+
+      // Handle events in background
+      const eventLoop = async () => {
+        try {
+          for await (const event of eventStream.stream) {
+            const payload = event.payload as any;
+
+            // Check session ID if available in properties
+            const eventSessionId = payload.properties?.sessionID;
+
+            if (eventSessionId && eventSessionId !== openCodeSessionId) {
+              continue;
+            }
+
+            if (payload.type === 'message.part.updated') {
+              const part = payload.properties.part;
+              // Log partial updates if needed
+              if (part && typeof part.text === 'string') {
+                // Logic for streaming updates (optional)
+              }
+            } else if (payload.type === 'tool.start') {
+              const toolName = payload.properties.tool?.name || 'unknown-tool';
+              this.addLog(sessionId, {
+                timestamp: new Date().toISOString(),
+                type: 'tool',
+                content: { text: `Tool started: ${toolName}`, details: payload.properties }
+              });
+            } else if (payload.type === 'tool.end') {
+              const toolName = payload.properties.tool?.name || 'unknown-tool';
+              const output = payload.properties.output;
+              this.addLog(sessionId, {
+                timestamp: new Date().toISOString(),
+                type: 'tool',
+                content: { text: `Tool ended: ${toolName}`, output: output }
+              });
+            }
+          }
+        } catch (e) {
+          console.error('Error in event loop:', e);
+        }
+      };
+
+      // Start event loop (do not await, let it run)
+      void eventLoop();
+
+      // Add log for sending message
       this.addLog(sessionId, {
         timestamp: new Date().toISOString(),
         type: 'message',
         content: {
-          message: { role: 'assistant', content: messageResult.response.text },
+          message: { role: 'user', content: options.prompt },
         },
       });
 
-      // Add detailed part logs if available
-      for (const part of messageResult.response.parts) {
-        if (part.type !== 'text') {
-          this.addLog(sessionId, {
-            timestamp: new Date().toISOString(),
-            type: part.type,
-            content: part,
-          });
-        }
+      // Send message to OpenCode
+      const promptResult = await this.openCodeClient.session.prompt({
+        sessionID: openCodeSessionId,
+        parts: [{ type: 'text', text: options.prompt }],
+        model: options.model ? {
+          providerID: options.model.provider_id,
+          modelID: options.model.model_id
+        } : undefined
+      });
+
+      if (promptResult.error) {
+        const errorMessage = (promptResult.error as any).message || String(promptResult.error);
+        throw new Error(`Failed to send message: ${errorMessage}`);
       }
+
+      const responseData = promptResult.data;
+
+      // Extract response text
+      let responseText = '';
+      if (responseData.parts) {
+        responseText = responseData.parts
+          .filter((p: any) => p.type === 'text')
+          .map((p: any) => p.text)
+          .join('');
+
+        this.addLog(sessionId, {
+          timestamp: new Date().toISOString(),
+          type: 'message',
+          content: {
+            message: { role: 'assistant', content: responseText }
+          }
+        });
+      }
+
+      // Mark as completed
+      this.updateStatus(sessionId, 'completed', {
+        response: responseText,
+        messages: [],
+        tool_calls_count: 0,
+      });
+
+      this.addLog(sessionId, {
+        timestamp: new Date().toISOString(),
+        type: 'system',
+        content: { text: 'Execution completed' },
+      });
+
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      throw new Error(`OpenCode interaction failed: ${message}`);
     }
-
-    // Mark as completed
-    this.updateStatus(sessionId, 'completed', {
-      response: messageResult.response?.text || '',
-      messages: [],
-      tool_calls_count: 0,
-    });
-
-    this.addLog(sessionId, {
-      timestamp: new Date().toISOString(),
-      type: 'system',
-      content: { text: 'Execution completed' },
-    });
   }
 
 

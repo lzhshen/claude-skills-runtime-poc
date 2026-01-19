@@ -16,6 +16,7 @@
   "dependencies": {
     "@hono/node-server": "^1.13.0",
     "@hono/zod-validator": "^0.4.0",
+    "@opencode-ai/sdk": "^1.1.25",
     "@skills-runtime/shared": "workspace:*",
     "hono": "^4.6.0",
     "js-yaml": "^4.1.0",
