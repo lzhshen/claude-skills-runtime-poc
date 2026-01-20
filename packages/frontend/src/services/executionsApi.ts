@@ -7,8 +7,10 @@ import type { ExecutionSession, ExecutionLog, Provider, Agent } from '@/types'
 
 export interface ExecuteRequest {
   prompt: string
-  model?: string
-  provider?: string
+  model?: {
+    provider_id: string
+    model_id: string
+  }
 }
 
 export interface ExecuteResponse {
@@ -18,7 +20,7 @@ export interface ExecuteResponse {
 }
 
 export interface StreamEvent {
-  type: 'message' | 'tool_call' | 'tool_result' | 'error' | 'complete'
+  type: 'message' | 'tool_call' | 'tool_result' | 'error' | 'complete' | 'stream' | 'system' | 'tool' | 'status'
   timestamp?: string
   content?: Record<string, unknown>
   status?: string

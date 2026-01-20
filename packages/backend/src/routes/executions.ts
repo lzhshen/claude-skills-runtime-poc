@@ -41,11 +41,15 @@ executionsRoutes.get('/:id/stream', async (c) => {
     return c.json(errorToResponse(new NotFoundError('Execution session', sessionId)), 404);
   }
 
+  // Set headers to prevent buffering at any proxy level
+  c.header('X-Accel-Buffering', 'no');
+  c.header('Cache-Control', 'no-cache, no-transform');
+
   return streamSSE(c, async (stream) => {
     // Send current status
     await stream.writeSSE({
-      event: 'status',
       data: JSON.stringify({
+        type: 'status',
         status: session.status,
         timestamp: new Date().toISOString(),
       }),
@@ -56,17 +60,16 @@ executionsRoutes.get('/:id/stream', async (c) => {
     if (logsResult) {
       for (const log of logsResult.logs) {
         await stream.writeSSE({
-          event: log.type,
           data: JSON.stringify(log),
         });
       }
     }
 
-    // If session is already complete, send complete event
+    // If session is already complete, send complete event and close
     if (['completed', 'failed', 'cancelled', 'timeout'].includes(session.status)) {
       await stream.writeSSE({
-        event: 'complete',
         data: JSON.stringify({
+          type: 'complete',
           status: session.status,
           duration_ms: session.duration_ms,
           timestamp: new Date().toISOString(),
@@ -75,47 +78,75 @@ executionsRoutes.get('/:id/stream', async (c) => {
       return;
     }
 
-    // For running sessions, poll for updates
-    let lastLogCount = logsResult?.logs.length ?? 0;
-    let attempts = 0;
-    const maxAttempts = 600; // 10 minutes at 1 second intervals
+    // Event listeners - with timing logs
+    let logCount = 0;
+    let lastLogTime = Date.now();
 
-    while (attempts < maxAttempts) {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    const onLog = async (payload: { sessionId: string; log: any }) => {
+      if (payload.sessionId === sessionId) {
+        const now = Date.now();
+        logCount++;
+        console.log(`[SSE:${sessionId.slice(0, 8)}] Forwarding log #${logCount}, delta: ${now - lastLogTime}ms`);
+        lastLogTime = now;
 
-      const currentSession = service.getExecution(sessionId);
-      if (!currentSession) {
-        break;
+        await stream.writeSSE({
+          data: JSON.stringify(payload.log),
+        });
       }
+    };
 
-      // Check for new logs
-      const currentLogs = service.getLogs(sessionId);
-      if (currentLogs && currentLogs.logs.length > lastLogCount) {
-        const newLogs = currentLogs.logs.slice(lastLogCount);
-        for (const log of newLogs) {
+    const onStatus = async (payload: { sessionId: string; status: string }) => {
+      if (payload.sessionId === sessionId) {
+        // Send status update if needed (frontend might care)
+        // Check for completion
+        if (['completed', 'failed', 'cancelled', 'timeout'].includes(payload.status)) {
+          // We need to fetch the final session state to get duration/result
+          const finalSession = service.getExecution(sessionId);
           await stream.writeSSE({
-            event: log.type,
-            data: JSON.stringify(log),
+            data: JSON.stringify({
+              type: 'complete',
+              status: finalSession?.status || payload.status,
+              duration_ms: finalSession?.duration_ms,
+              timestamp: new Date().toISOString(),
+            }),
+          });
+          // Allow the stream to close naturally by resolving the promise? 
+          // Hono's streamSSE keeps connection open while the async callback is running.
+          // To close it from valid completion, we can't easily break the "onAbort" wait unless we return.
+          // But we are in a callback.
+          // Actually, we can just remove listeners. The stream will stay open until client disconnects 
+          // OR we can try to return. But we are inside event handlers.
+
+          // For now, let's keep sending events. The frontend will close EventSource on 'complete'.
+          // When frontend closes, onAbort will fire.
+        } else {
+          await stream.writeSSE({
+            data: JSON.stringify({
+              type: 'status',
+              status: payload.status,
+              timestamp: new Date().toISOString(),
+            }),
           });
         }
-        lastLogCount = currentLogs.logs.length;
       }
+    };
 
-      // Check if session is complete
-      if (['completed', 'failed', 'cancelled', 'timeout'].includes(currentSession.status)) {
-        await stream.writeSSE({
-          event: 'complete',
-          data: JSON.stringify({
-            status: currentSession.status,
-            duration_ms: currentSession.duration_ms,
-            timestamp: new Date().toISOString(),
-          }),
-        });
-        break;
-      }
+    service.on('log', onLog);
+    service.on('status', onStatus);
 
-      attempts++;
-    }
+    // Wait for client disconnect
+    // Hono streamSSE keeps running until this async function returns.
+    // If we return, the stream closes.
+    // So we need to hang here.
+    await new Promise<void>((resolve) => {
+      stream.onAbort(() => {
+        resolve();
+      });
+    });
+
+    // Cleanup
+    service.off('log', onLog);
+    service.off('status', onStatus);
   });
 });
 

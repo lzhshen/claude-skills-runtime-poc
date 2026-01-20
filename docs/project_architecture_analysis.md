@@ -13,6 +13,23 @@
 | **API 端点** | 标准 SDK 方法 | 使用 SDK 封装方法 (`session.create`, `session.prompt`)，内部自动处理正确的 API 路径和类型。 | ✅ 已完成 |
 | **交互模式** | 客户端/服务器分离 | 后端 (`packages/backend`) 作为 BFF 层，代理前端请求并通过 SDK 与 Opencode Server 通信。 | ⚠️ BFF 模式 |
 
+### 1.1 架构差异分析 (Architecture Gap Analysis)
+
+对比标准实现 (`opencode/packages/app` Case A) 与当前实现，主要差异在于流式连接的管理方式：
+
+| 维度 | 标准架构 (Opencode Case A) | 当前实现 (claude-skills-runtime-poc) | 影响评估 |
+| :--- | :--- | :--- | :--- |
+| **流式连接** | **单连接/用户** (Per User/Client) | **多连接/请求** (Per Request) | 🚩 **高风险** |
+| **SDK 接口** | `client.event.subscribe()` | `client.global.event()` | 语义一致，API路径不同 |
+| **事件处理** | 自动过滤，UI 直接消费 | 后端收到全量事件后手动过滤 | 带宽浪费，CPU 浪费 |
+| **扩展性** | 高 (依赖 SSE 天然并发) | 低 (受限于后端与 Server 间的连接数) | 潜在的 DDoS 风险 |
+
+**主要风险 (Connection Storm)**:
+当前 `ExecutionService` 为每个技能执行请求都建立一个新的 SSE 连接 (`global.event()`)。在高并发场景下，这将导致后端与 OpenCode Server 之间建立大量冗余的长连接，可能触发端口耗尽或服务器负载过高。
+
+**建议方案**:
+重构为**单例监听 + 分发模式**。后端维护单一的 SDK 事件流连接，通过内部 EventBus (`EventEmitter`) 根据 SessionID 将事件分发给具体的 HTTP/SSE 响应流。
+
 ## 2. 系统上下文 (System Context)
 
 系统采用典型的 Backend-for-Frontend (BFF) 架构：
@@ -27,12 +44,15 @@ flowchart TB
     subgraph "Skills Runtime POC Environment"
         BFF["Skills Runtime Backend"]
         Service["Execution Service"]
+        EventBus["OpenCodeEventBus (Singleton)"]
         SDK["@opencode-ai/sdk"]
         Store["Execution Storage (In-Memory)"]
         
         BFF --> Service
-        Service --> SDK
         Service --> Store
+        Service --"Command"--> SDK
+        Service --"Subscribe"--> EventBus
+        EventBus --"Global Event Loop"--> SDK
     end
 
     subgraph "External Systems"
@@ -41,7 +61,8 @@ flowchart TB
     end
 
     Browser --"SSE /api/v1/executions/:id/stream"--> BFF
-    SDK --"HTTP/SSE"--> Opencode
+    SDK --"HTTP (Commands)"--> Opencode
+    SDK --"SSE (Global Stream)"--> Opencode
     Opencode -.-> LLM
 ```
 
@@ -106,7 +127,7 @@ sequenceDiagram
 
 ## 4. 核心业务场景：技能执行 (Skill Execution)
 
-重构后，技能执行流程支持全链路流式传输：
+重构后，技能执行流程支持全链路流式传输，利用 **EventBus** 实现连接复用：
 
 ### 时序图 (Sequence Diagram)
 
@@ -115,22 +136,40 @@ sequenceDiagram
 sequenceDiagram
     autonumber
     actor User
-    participant FE as Frontend
-    participant ES as ExecutionService
-    participant SDK as Opencode SDK
+
+    box "User Environment (Browser)" #21252b
+        participant FE as Frontend
+    end
+
+    box "System Context (Skills Runtime Backend)" #282c34
+        participant ES as ExecutionService
+        participant Bus as OpenCodeEventBus
+        participant SDK as Opencode SDK
+    end
+
     participant Server as Opencode Server (Remote)
 
-    %% 1. Start Execution
-    Note over User, Server: 1. 发起执行 (Start Execution)
+    Note over Server: Pre-condition: Opencode Server running externally
+    Note over Bus, Server: Pre-condition: Bus has established global SSE connection
+
+    %% 1. Start Execution & Session Setup
+    Note over User, Server: 1. 发起执行与会话创建 (Start & Session)
     User->>FE: 点击 "Run Skill"
     FE->>ES: POST /executions { prompt }
     
     activate ES
-    ES->>SDK: session.create()
-    SDK->>Server: POST /session
-    Server-->>SDK: { id: "sess_123" }
     
-    ES->>SDK: global.event() (Start Listening)
+    rect rgb(33, 37, 43)
+        Note right of ES: 创建会话 (Create Session)
+        ES->>SDK: session.create()
+        SDK->>Server: POST /session
+        Server-->>SDK: { id: "sess_123" }
+    end
+    
+    Note right of ES: 注册监听 (Subscribe)
+    ES->>Bus: subscribe("sess_123")
+    activate Bus
+    Bus-->>ES: listeners attached
     
     ES-->>FE: Return { id: "exec_1", status: 'running' }
     deactivate ES
@@ -145,14 +184,11 @@ sequenceDiagram
         ES->>SDK: session.prompt(prompt)
         activate Server
         
-        loop Event Stream
-            Server-->>SDK: SSE Event (tool.start)
-            SDK-->>ES: Event Handler
-            ES-->>FE: SSE Data (Type: tool_call)
-            
-            Server-->>SDK: SSE Event (message.part.updated)
-            SDK-->>ES: Event Handler
-            ES-->>FE: SSE Data (Type: message)
+        loop Event Distribution
+            Server-->>SDK: SSE Event (tool/message)
+            SDK-->>Bus: Global Event Stream
+            Bus-->>ES: Dispatch to "sess_123" Listener
+            ES-->>FE: SSE Data (User Stream)
         end
         
         Server-->>SDK: Response (Done)
@@ -160,6 +196,9 @@ sequenceDiagram
     and Frontend Display
         FE->>User: 实时显示日志与结果
     end
+    
+    ES->>Bus: unsubscribe("sess_123")
+    deactivate Bus
     
     ES->>ES: Update Status -> Completed
     ES-->>FE: SSE Event (complete)

@@ -18,12 +18,15 @@
     "@hono/zod-validator": "^0.4.0",
     "@opencode-ai/sdk": "^1.1.25",
     "@skills-runtime/shared": "workspace:*",
+    "eventsource": "^4.1.0",
     "hono": "^4.6.0",
     "js-yaml": "^4.1.0",
     "jszip": "^3.10.1",
+    "undici": "^7.18.2",
     "uuid": "^10.0.0"
   },
   "devDependencies": {
+    "@types/eventsource": "^3.0.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.0.0",
     "@types/uuid": "^10.0.0",

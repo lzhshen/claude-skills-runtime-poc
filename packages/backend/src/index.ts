@@ -7,6 +7,10 @@ import { healthRoutes } from './routes/health.js';
 import { skillsRoutes } from './routes/skills.js';
 import { executionsRoutes } from './routes/executions.js';
 import { configRoutes } from './routes/config.js';
+import { initializeOpenCodeEventBus } from './services/opencode.events.js';
+
+// Initialize the global OpenCode event bus at server startup (fire-and-forget)
+initializeOpenCodeEventBus();
 
 const app = new Hono();
 

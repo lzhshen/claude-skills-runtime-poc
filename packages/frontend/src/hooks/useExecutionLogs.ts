@@ -115,7 +115,72 @@ export function useExecutionLogs(): UseExecutionLogsResult {
       const eventType = event.type as string;
       if (eventType === 'status' || eventType === 'complete') return;
 
-      setLogs(prev => [...prev, newLog])
+      if (eventType === 'stream') {
+        const streamContent = event.content as { type: string, text: string };
+        const textDelta = streamContent?.text || '';
+
+        if (!textDelta) return;
+
+        setLogs(prev => {
+          const lastLog = prev[prev.length - 1];
+
+          // Check if we are already streaming a message
+          // We use a custom flag _isStreaming on the log object to track this state
+          const isStreamingMessage = lastLog &&
+            lastLog.type === 'message' &&
+            (lastLog as any)._isStreaming === true;
+
+          if (isStreamingMessage) {
+            // Append to existing log
+            const currentMessage = lastLog.content.message as any;
+            let newText = currentMessage.content || '';
+
+            // Append delta
+            newText += textDelta;
+
+            const updatedLog: ExecutionLog = {
+              ...lastLog,
+              timestamp: event.timestamp || new Date().toISOString(),
+              content: {
+                ...lastLog.content,
+                message: {
+                  ...currentMessage,
+                  content: newText
+                }
+              }
+            };
+            // Replace the last log with the updated one
+            return [...prev.slice(0, -1), updatedLog];
+          } else {
+            // Start a new streaming message log
+            const newLog: ExecutionLog = {
+              type: 'message',
+              timestamp: event.timestamp || new Date().toISOString(),
+              content: {
+                message: {
+                  role: 'assistant',
+                  content: textDelta
+                }
+              },
+              // Internal flag to track streaming state
+              // @ts-ignore
+              _isStreaming: true
+            };
+            return [...prev, newLog];
+          }
+        });
+        return;
+      }
+
+      setLogs(prev => {
+        // If we receive a non-stream log, it might interrupt a stream, 
+        // or just be a separate log (e.g. tool call).
+        // If the last log was streaming, we effectively "finish" it by not carrying over the _isStreaming flag 
+        // to strictly this new log (obviously), but we don't need to explicitly unset it on the old one 
+        // unless we want to "close" it visually. 
+        // For now, just appending is fine.
+        return [...prev, newLog]
+      })
     }
 
     const handleError = (err: Error) => {

@@ -85,7 +85,58 @@ export function useSkillExecution(): UseSkillExecutionResult {
     } else if (event.type === 'error') {
       setStatus('failed')
       setError(event.message || 'Unknown error')
+    } else if (event.type === 'stream') {
+      // Handle streaming text deltas - coalesce into a single message
+      const streamContent = event.content as { type?: string; text?: string } | undefined
+      const textDelta = streamContent?.text || ''
+
+      if (!textDelta) return
+
+      setLogs((prev) => {
+        const lastLog = prev[prev.length - 1]
+
+        // Check if we are already streaming a message
+        const isStreamingMessage =
+          lastLog &&
+          lastLog.type === 'message' &&
+          (lastLog as any)._isStreaming === true
+
+        if (isStreamingMessage) {
+          // Append to existing streaming message
+          const currentMessage = lastLog.content.message as { role: string; content: string }
+          const newText = (currentMessage.content || '') + textDelta
+
+          const updatedLog: ExecutionLog = {
+            ...lastLog,
+            timestamp: event.timestamp || new Date().toISOString(),
+            content: {
+              ...lastLog.content,
+              message: {
+                ...currentMessage,
+                content: newText,
+              },
+            },
+          }
+          return [...prev.slice(0, -1), updatedLog]
+        } else {
+          // Start a new streaming message log
+          const newLog: ExecutionLog = {
+            type: 'message',
+            timestamp: event.timestamp || new Date().toISOString(),
+            content: {
+              message: {
+                role: 'assistant',
+                content: textDelta,
+              },
+            },
+            // @ts-ignore - Internal flag to track streaming state
+            _isStreaming: true,
+          }
+          return [...prev, newLog]
+        }
+      })
     } else {
+      // Handle other log types (system, tool, message, etc.)
       const log: ExecutionLog = {
         timestamp: event.timestamp || new Date().toISOString(),
         type: event.type,
@@ -150,8 +201,13 @@ export function useSkillExecution(): UseSkillExecutionResult {
     try {
       const request: ExecuteRequest = {
         prompt: prompt.trim(),
-        model: selectedModel || undefined,
-        provider: selectedProvider || undefined,
+        model:
+          selectedProvider && selectedModel
+            ? {
+              provider_id: selectedProvider,
+              model_id: selectedModel,
+            }
+            : undefined,
       }
 
       const response = await executeSkill(currentSkill.id, request)
